@@ -10,11 +10,11 @@ import (
 type Hub struct {
 	ID         string
 	Name       string
-	clients    map[*Client]bool
-	channels   map[*Channel]bool
-	register   chan *Client
-	unregister chan *Client
-	broadcast  chan []byte
+	Clients    map[*Client]bool
+	Channels   map[*Channel]bool
+	Register   chan *Client
+	UnRegister chan *Client
+	Broadcast  chan []byte
 }
 
 func NewHub(id, name string) (*Hub, error) {
@@ -28,33 +28,33 @@ func NewHub(id, name string) (*Hub, error) {
 	return &Hub{
 		ID:         id,
 		Name:       name,
-		clients:    make(map[*Client]bool),
-		channels:   make(map[*Channel]bool),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		broadcast:  make(chan []byte),
+		Clients:    make(map[*Client]bool),
+		Channels:   make(map[*Channel]bool),
+		Register:   make(chan *Client),
+		UnRegister: make(chan *Client),
+		Broadcast:  make(chan []byte),
 	}, nil
 }
 
-func (h *Hub) registerClient(client *Client) {
-	h.clients[client] = true
+func (h *Hub) RegisterClient(client *Client) {
+	h.Clients[client] = true
 }
 
-func (h *Hub) unregisterClient(client *Client) {
+func (h *Hub) UnRegisterClient(client *Client) {
 	for channel := range client.Channels {
-		channel.unregister <- client
+		channel.UnRegister <- client
 	}
-	delete(h.clients, client)
+	delete(h.Clients, client)
 }
 
-func (h *Hub) broadcastToClients(message []byte) {
-	for client := range h.clients {
+func (h *Hub) BroadcastToClients(message []byte) {
+	for client := range h.Clients {
 		client.Send <- message
 	}
 }
 
 func (h *Hub) FindChannelByID(id string) *Channel {
-	for channel := range h.channels {
+	for channel := range h.Channels {
 		if channel.ID == id {
 			return channel
 		}
@@ -63,7 +63,7 @@ func (h *Hub) FindChannelByID(id string) *Channel {
 }
 
 func (h *Hub) FindChannelByName(name string) *Channel {
-	for channel := range h.channels {
+	for channel := range h.Channels {
 		if channel.Name == name {
 			return channel
 		}

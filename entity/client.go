@@ -37,14 +37,14 @@ func (c *Client) JoinChannel(channel *Channel) {
 		return
 	}
 	c.Channels[channel] = true
-	channel.register <- c
+	channel.Register <- c
 }
 
 func (c *Client) LeaveChannel(channel *Channel) {
 	if !c.isInChannel(channel) {
 		return
 	}
-	channel.unregister <- c
+	channel.UnRegister <- c
 	delete(c.Channels, channel)
 }
 

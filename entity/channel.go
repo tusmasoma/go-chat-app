@@ -11,10 +11,10 @@ type Channel struct {
 	ID         string
 	Name       string
 	Private    bool
-	clients    map[*Client]bool
-	register   chan *Client
-	unregister chan *Client
-	// broadcast  chan *WSMessage
+	Clients    map[*Client]bool
+	Register   chan *Client
+	UnRegister chan *Client
+	Broadcast  chan *Message
 }
 
 func NewChannel(id, name string, private bool) (*Channel, error) {
@@ -29,21 +29,29 @@ func NewChannel(id, name string, private bool) (*Channel, error) {
 		ID:         id,
 		Name:       name,
 		Private:    private,
-		clients:    make(map[*Client]bool),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
+		Clients:    make(map[*Client]bool),
+		Register:   make(chan *Client),
+		UnRegister: make(chan *Client),
 		// broadcast:  make(chan *WSMessage),
 	}, nil
 }
 
-func (c *Channel) broadcastToClientsInChannel(message []byte) {
-	for client := range c.clients {
+func (c *Channel) RegisterClientInChannel(client *Client) {
+	c.Clients[client] = true
+}
+
+func (c *Channel) UnRegisterClientInChannel(client *Client) {
+	delete(c.Clients, client)
+}
+
+func (c *Channel) BroadcastToClientsInChannel(message []byte) {
+	for client := range c.Clients {
 		client.Send <- message
 	}
 }
 
 func (c *Channel) FindClientByID(id string) *Client {
-	for client := range c.clients {
+	for client := range c.Clients {
 		if client.ID == id {
 			return client
 		}
@@ -52,7 +60,7 @@ func (c *Channel) FindClientByID(id string) *Client {
 }
 
 func (c *Channel) FindClientByUserID(userID string) *Client {
-	for client := range c.clients {
+	for client := range c.Clients {
 		if client.UserID == userID {
 			return client
 		}
