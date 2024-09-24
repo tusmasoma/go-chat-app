@@ -35,6 +35,12 @@ func (ch *channelHandler) Run(ctx context.Context) {
 	}
 }
 
+func (ch *channelHandler) broadcastToClientsInChannel(message []byte) {
+	for client := range ch.channel.Clients {
+		client.Send <- message
+	}
+}
+
 func (ch *channelHandler) publishChannelMessage(ctx context.Context, message *entity.Message) {
 	msg, err := message.Encode()
 	if err != nil {
@@ -53,6 +59,6 @@ func (ch *channelHandler) subscribeToChannelMessages(ctx context.Context) {
 	msgs := pubsub.Channel()
 
 	for msg := range msgs {
-		ch.channel.BroadcastToClientsInChannel([]byte(msg.Payload))
+		ch.broadcastToClientsInChannel([]byte(msg.Payload))
 	}
 }

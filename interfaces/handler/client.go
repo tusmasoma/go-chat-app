@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/tusmasoma/go-chat-app/entity"
+	"github.com/tusmasoma/go-chat-app/usecase"
 	"github.com/tusmasoma/go-tech-dojo/pkg/log"
 )
 
@@ -43,12 +44,14 @@ var newline = []byte{'\n'}
 type clientHandler struct {
 	client *entity.Client
 	conn   *websocket.Conn
+	muc    usecase.MessageUseCase
 }
 
-func NewClientHandler(client *entity.Client, conn *websocket.Conn) *clientHandler {
+func NewClientHandler(client *entity.Client, conn *websocket.Conn, muc usecase.MessageUseCase) *clientHandler {
 	return &clientHandler{
 		client: client,
 		conn:   conn,
+		muc:    muc,
 	}
 }
 
@@ -174,21 +177,25 @@ func (ch *clientHandler) handleNewMessage(jsonMessage []byte) {
 
 func (ch *clientHandler) routeMessageAction(ctx context.Context, message entity.Message) {
 	switch message.Action {
-	case entity.ListMessagesAction:
-		// client.handleListMessages(ctx, message)
 	case entity.CreateMessageAction:
-		// client.handleCreateMessage(ctx, message)
-	case entity.DeleteMessageAction:
-		// client.handleDeleteMessage(ctx, message)
+		ch.muc.CreateMessage(ctx, &message)
+		ch.broadcastMessage(message.TargetID, &message)
 	case entity.UpdateMessageAction:
-	// 	client.handleUpdateMessage(ctx, message)
-	case entity.CreatePublicChannelAction:
-		// client.handleCreatePublicChannel(ctx, message)
-	case entity.JoinPublicChannelAction:
-		// client.handleJoinPublicChannel(ctx, message)
-	case entity.LeavePublicChannelAction:
-		// client.handleLeavePublicChannel(ctx, message)
+		ch.muc.UpdateMessage(ctx, &message)
+		ch.broadcastMessage(message.TargetID, &message)
+	case entity.DeleteMessageAction:
+		ch.muc.DeleteMessage(ctx, &message)
+		ch.broadcastMessage(message.TargetID, &message)
 	default:
 		log.Warn("Unknown message action", log.Fstring("action", message.Action))
+	}
+}
+
+func (ch *clientHandler) broadcastMessage(channelID string, message *entity.Message) {
+	if channel := ch.client.Hub.FindChannelByID(channelID); channel != nil {
+		log.Info("Broadcasting message", log.Fstring("channelID", channelID), log.Fstring("messageID", message.ID))
+		channel.Broadcast <- message
+	} else {
+		log.Warn("Channel not found", log.Fstring("channelID", channelID))
 	}
 }

@@ -44,12 +44,6 @@ func (c *Channel) UnRegisterClientInChannel(client *Client) {
 	delete(c.Clients, client)
 }
 
-func (c *Channel) BroadcastToClientsInChannel(message []byte) {
-	for client := range c.Clients {
-		client.Send <- message
-	}
-}
-
 func (c *Channel) FindClientByID(id string) *Client {
 	for client := range c.Clients {
 		if client.ID == id {

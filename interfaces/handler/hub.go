@@ -24,7 +24,13 @@ func (h *hubHandler) Run(ctx context.Context) {
 		case client := <-h.hub.UnRegister:
 			h.hub.UnRegisterClient(client)
 		case message := <-h.hub.Broadcast:
-			h.hub.BroadcastToClients(message)
+			h.broadcastToClients(message)
 		}
+	}
+}
+
+func (h *hubHandler) broadcastToClients(message []byte) {
+	for client := range h.hub.Clients {
+		client.Send <- message
 	}
 }
