@@ -183,13 +183,22 @@ func (cm *clientManager) handleNewMessage(jsonMessage []byte) {
 func (cm *clientManager) routeMessageAction(ctx context.Context, message entity.Message) {
 	switch message.Action {
 	case entity.CreateMessageAction:
-		cm.muc.CreateMessage(ctx, &message)
+		if err := cm.muc.CreateMessage(ctx, &message); err != nil {
+			log.Error("Failed to create message", log.Ferror(err))
+			return
+		}
 		cm.broadcastMessage(message.TargetID, &message)
 	case entity.UpdateMessageAction:
-		cm.muc.UpdateMessage(ctx, &message)
+		if err := cm.muc.UpdateMessage(ctx, &message); err != nil {
+			log.Error("Failed to update message", log.Ferror(err))
+			return
+		}
 		cm.broadcastMessage(message.TargetID, &message)
 	case entity.DeleteMessageAction:
-		cm.muc.DeleteMessage(ctx, &message)
+		if err := cm.muc.DeleteMessage(ctx, &message); err != nil {
+			log.Error("Failed to delete message", log.Ferror(err))
+			return
+		}
 		cm.broadcastMessage(message.TargetID, &message)
 	default:
 		log.Warn("Unknown message action", log.Fstring("action", message.Action))

@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"context"
-
 	"github.com/tusmasoma/go-chat-app/entity"
 )
 
@@ -26,13 +24,13 @@ func NewHubHandler(hub *entity.Hub) HubManager {
 	}
 }
 
-func (hm *hubManager) Run(ctx context.Context) {
+func (hm *hubManager) Run() {
 	for {
 		select {
 		case client := <-hm.register:
 			hm.registerClient(client)
 		case client := <-hm.unregister:
-			hm.hub.UnRegisterClient(client)
+			hm.unregisterClient(client)
 		case message := <-hm.broadcast:
 			hm.broadcastToClients(message)
 		}
