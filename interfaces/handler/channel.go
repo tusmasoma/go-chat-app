@@ -3,9 +3,10 @@ package handler
 import (
 	"context"
 
+	"github.com/tusmasoma/go-tech-dojo/pkg/log"
+
 	"github.com/tusmasoma/go-chat-app/entity"
 	"github.com/tusmasoma/go-chat-app/repository"
-	"github.com/tusmasoma/go-tech-dojo/pkg/log"
 )
 
 type ChannelManager interface{}

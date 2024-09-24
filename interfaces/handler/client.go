@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/tusmasoma/go-tech-dojo/pkg/log"
+
 	"github.com/tusmasoma/go-chat-app/config"
 	"github.com/tusmasoma/go-chat-app/entity"
 	"github.com/tusmasoma/go-chat-app/usecase"
-	"github.com/tusmasoma/go-tech-dojo/pkg/log"
 )
 
 var newline = []byte{'\n'}

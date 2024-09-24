@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/tusmasoma/go-tech-dojo/pkg/log"
+
 	"github.com/tusmasoma/go-chat-app/entity"
 	"github.com/tusmasoma/go-chat-app/repository"
-	"github.com/tusmasoma/go-tech-dojo/pkg/log"
 )
 
 type MessageUseCase interface {
