@@ -6,37 +6,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/tusmasoma/go-chat-app/config"
 	"github.com/tusmasoma/go-chat-app/entity"
 	"github.com/tusmasoma/go-chat-app/usecase"
 	"github.com/tusmasoma/go-tech-dojo/pkg/log"
-)
-
-const (
-	// Max wait time when writing a message to the peer.
-	WriteWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	PongWait       = 60 * time.Second
-	PingMultiplier = 9
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	PingPeriod = (PongWait * PingMultiplier) / 10
-
-	// Max message size allowed from peer.
-	MaxMessageSize = 10000
-
-	// Max buffer size for messages.
-	BufferSize = 4096
-
-	// ChannelBufferSize is the buffer size for the channel.
-	ChannelBufferSize = 256
-
-	// PubSubGeneralChannel is the general channel for pubsub.
-	PubSubGeneralChannel = "general"
-
-	// PubSubChannelPrefix is the prefix for the channel channel.
-	WelcomeMessage = "%s joined the channel"
-	GoodbyeMessage = "%s left the channel"
 )
 
 var newline = []byte{'\n'}
@@ -55,7 +28,7 @@ func NewclientManager(client *entity.Client, conn *websocket.Conn, muc usecase.M
 	return &clientManager{
 		client: client,
 		conn:   conn,
-		send:   make(chan []byte, BufferSize),
+		send:   make(chan []byte, config.BufferSize),
 		muc:    muc,
 	}
 }
@@ -65,12 +38,12 @@ func (cm *clientManager) ReadPump() {
 		cm.disconnect()
 	}()
 
-	cm.conn.SetReadLimit(MaxMessageSize)
-	if err := cm.conn.SetReadDeadline(time.Now().Add(PongWait)); err != nil {
+	cm.conn.SetReadLimit(config.MaxMessageSize)
+	if err := cm.conn.SetReadDeadline(time.Now().Add(config.PongWait)); err != nil {
 		log.Error("Failed to set read deadline", log.Ferror(err))
 	}
 	cm.conn.SetPongHandler(func(string) error {
-		err := cm.conn.SetReadDeadline(time.Now().Add(PongWait))
+		err := cm.conn.SetReadDeadline(time.Now().Add(config.PongWait))
 		if err != nil {
 			log.Error("Error setting read deadline", log.Ferror(err))
 			return err
@@ -94,7 +67,7 @@ func (cm *clientManager) ReadPump() {
 }
 
 func (cm *clientManager) WritePump() { //nolint: gocognit
-	ticker := time.NewTicker(PingPeriod)
+	ticker := time.NewTicker(config.PingPeriod)
 	defer func() {
 		ticker.Stop()
 		cm.conn.Close()
@@ -103,7 +76,7 @@ func (cm *clientManager) WritePump() { //nolint: gocognit
 	for {
 		select {
 		case message, ok := <-cm.send:
-			if err := cm.conn.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
+			if err := cm.conn.SetWriteDeadline(time.Now().Add(config.WriteWait)); err != nil {
 				log.Error("Failed to set write deadline", log.Ferror(err))
 				return
 			}
@@ -144,7 +117,7 @@ func (cm *clientManager) WritePump() { //nolint: gocognit
 				return
 			}
 		case <-ticker.C:
-			if err := cm.conn.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
+			if err := cm.conn.SetWriteDeadline(time.Now().Add(config.WriteWait)); err != nil {
 				log.Error("Failed to set write deadline", log.Ferror(err))
 				return
 			}
