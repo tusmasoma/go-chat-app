@@ -7,6 +7,6 @@ import (
 )
 
 type PubSubRepository interface {
-	Publish(ctx context.Context, channel string, message any) error
-	Subscribe(ctx context.Context, channel string) *redis.PubSub // TODO: *redis.PubSub を汎用化する
+	Publish(ctx context.Context, channelID string, message []byte) error
+	Subscribe(ctx context.Context, channelID string) *redis.PubSub // TODO: *redis.PubSub を汎用化する
 }

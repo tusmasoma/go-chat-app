@@ -32,13 +32,13 @@ var validActions = map[string]bool{
 }
 
 type Message struct {
-	ID        string
-	UserID    string
-	Text      string
-	CreatedAt time.Time
-	Action    string
-	TargetID  string // TargetID is the ID of the channel or user the message is intended for
-	SenderID  string // SenderID is the ID of the user who sent the message
+	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
+	Text      string    `json:"text"`
+	CreatedAt time.Time `json:"created_at"`
+	Action    string    `json:"action"`
+	TargetID  string    `json:"target_id"` // TargetID is the ID of the channel or user the message is intended for
+	SenderID  string    `json:"sender_id"` // SenderID is the ID of the user who sent the message
 }
 
 type Messages []*Message

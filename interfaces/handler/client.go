@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -51,9 +53,9 @@ func NewClientHandler(client *entity.Client, conn *websocket.Conn) *clientHandle
 }
 
 func (ch *clientHandler) ReadPump() {
-	// defer func() {
-	// 	client.disconnect()
-	// }()
+	defer func() {
+		ch.disconnect()
+	}()
 
 	ch.conn.SetReadLimit(MaxMessageSize)
 	if err := ch.conn.SetReadDeadline(time.Now().Add(PongWait)); err != nil {
@@ -146,33 +148,47 @@ func (ch *clientHandler) WritePump() { //nolint: gocognit
 	}
 }
 
+func (ch *clientHandler) disconnect() {
+	ch.client.Hub.UnRegister <- ch.client
+	close(ch.client.Send)
+	if err := ch.conn.Close(); err != nil {
+		log.Warn("Failed to close connection", log.Ferror(err))
+	} else {
+		log.Info("Client disconnected successfully", log.Fstring("clientID", ch.client.ID))
+	}
+}
+
 func (ch *clientHandler) handleNewMessage(jsonMessage []byte) {
-	// ctx := context.Background()
+	ctx := context.Background()
 
-	// var message entity.WSMessage
-	// if err := json.Unmarshal(jsonMessage, &message); err != nil {
-	// 	log.Error("Error unmarshalling JSON message", log.Ferror(err))
-	// 	return
-	// }
+	var message entity.Message
+	if err := json.Unmarshal(jsonMessage, &message); err != nil {
+		log.Error("Error unmarshalling JSON message", log.Ferror(err))
+		return
+	}
 
-	// message.SenderID = client.ID
+	message.SenderID = ch.client.UserID
 
-	// switch message.Action {
-	// case entity.ListMessagesAction:
-	// 	client.handleListMessages(ctx, message)
-	// case entity.CreateMessageAction:
-	// 	client.handleCreateMessage(ctx, message)
-	// case entity.DeleteMessageAction:
-	// 	client.handleDeleteMessage(ctx, message)
-	// case entity.UpdateMessageAction:
+	ch.routeMessageAction(ctx, message)
+}
+
+func (ch *clientHandler) routeMessageAction(ctx context.Context, message entity.Message) {
+	switch message.Action {
+	case entity.ListMessagesAction:
+		// client.handleListMessages(ctx, message)
+	case entity.CreateMessageAction:
+		// client.handleCreateMessage(ctx, message)
+	case entity.DeleteMessageAction:
+		// client.handleDeleteMessage(ctx, message)
+	case entity.UpdateMessageAction:
 	// 	client.handleUpdateMessage(ctx, message)
-	// case entity.CreatePublicChannelAction:
-	// 	client.handleCreatePublicChannel(ctx, message)
-	// case entity.JoinPublicChannelAction:
-	// 	client.handleJoinPublicChannel(ctx, message)
-	// case entity.LeavePublicChannelAction:
-	// 	client.handleLeavePublicChannel(ctx, message)
-	// default:
-	// 	log.Warn("Unknown message action", log.Fstring("action", message.Action))
-	// }
+	case entity.CreatePublicChannelAction:
+		// client.handleCreatePublicChannel(ctx, message)
+	case entity.JoinPublicChannelAction:
+		// client.handleJoinPublicChannel(ctx, message)
+	case entity.LeavePublicChannelAction:
+		// client.handleLeavePublicChannel(ctx, message)
+	default:
+		log.Warn("Unknown message action", log.Fstring("action", message.Action))
+	}
 }
