@@ -9,10 +9,9 @@ import (
 
 type Client struct {
 	ID       string
-	UserID   string // TODO: membershipIDに変更すべきか？
+	UserID   string
 	Hub      *Hub
 	Channels map[*Channel]bool
-	Send     chan []byte
 }
 
 func NewClient(id, userID string, hub *Hub) (*Client, error) {
@@ -28,7 +27,6 @@ func NewClient(id, userID string, hub *Hub) (*Client, error) {
 		UserID:   userID,
 		Hub:      hub,
 		Channels: make(map[*Channel]bool),
-		Send:     make(chan []byte),
 	}, nil
 }
 
@@ -37,14 +35,14 @@ func (c *Client) JoinChannel(channel *Channel) {
 		return
 	}
 	c.Channels[channel] = true
-	channel.Register <- c
+	// channel.Register <- c
 }
 
 func (c *Client) LeaveChannel(channel *Channel) {
 	if !c.isInChannel(channel) {
 		return
 	}
-	channel.UnRegister <- c
+	// channel.UnRegister <- c
 	delete(c.Channels, channel)
 }
 

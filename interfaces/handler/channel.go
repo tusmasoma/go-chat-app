@@ -8,57 +8,66 @@ import (
 	"github.com/tusmasoma/go-tech-dojo/pkg/log"
 )
 
-type channelHandler struct {
-	channel *entity.Channel
-	psr     repository.PubSubRepository
+type ChannelManager interface{}
+
+type channelManager struct {
+	channel        *entity.Channel
+	clientManagers map[*clientManager]bool
+	register       chan *entity.Client
+	unregister     chan *entity.Client
+	broadcast      chan *entity.Message
+	psr            repository.PubSubRepository
 }
 
-func NewChannelHandler(channel *entity.Channel, psr repository.PubSubRepository) *channelHandler {
-	return &channelHandler{
-		channel: channel,
-		psr:     psr,
+func NewChannelManager(channel *entity.Channel, psr repository.PubSubRepository) ChannelManager {
+	return &channelManager{
+		channel:    channel,
+		register:   make(chan *entity.Client),
+		unregister: make(chan *entity.Client),
+		broadcast:  make(chan *entity.Message),
+		psr:        psr,
 	}
 }
 
-func (ch *channelHandler) Run(ctx context.Context) {
-	go ch.subscribeToChannelMessages(ctx)
+func (cm *channelManager) Run(ctx context.Context) {
+	go cm.subscribeToChannelMessages(ctx)
 
 	for {
 		select {
-		case client := <-ch.channel.Register:
-			ch.channel.RegisterClientInChannel(client)
-		case client := <-ch.channel.UnRegister:
-			ch.channel.UnRegisterClientInChannel(client)
-		case message := <-ch.channel.Broadcast:
-			ch.publishChannelMessage(ctx, message)
+		case client := <-cm.register:
+			cm.channel.RegisterClientInChannel(client)
+		case client := <-cm.unregister:
+			cm.channel.UnRegisterClientInChannel(client)
+		case message := <-cm.broadcast:
+			cm.publishChannelMessage(ctx, message)
 		}
 	}
 }
 
-func (ch *channelHandler) broadcastToClientsInChannel(message []byte) {
-	for client := range ch.channel.Clients {
-		client.Send <- message
+func (cm *channelManager) broadcastToClientsInChannel(message []byte) {
+	for cm := range cm.clientManagers {
+		cm.send <- message
 	}
 }
 
-func (ch *channelHandler) publishChannelMessage(ctx context.Context, message *entity.Message) {
+func (cm *channelManager) publishChannelMessage(ctx context.Context, message *entity.Message) {
 	msg, err := message.Encode()
 	if err != nil {
 		log.Error("Failed to encode message", log.Ferror(err))
 		return
 	}
-	if err := ch.psr.Publish(ctx, ch.channel.ID, msg); err != nil {
+	if err := cm.psr.Publish(ctx, cm.channel.ID, msg); err != nil {
 		log.Error("Failed to publish message", log.Ferror(err))
 	}
 }
 
-func (ch *channelHandler) subscribeToChannelMessages(ctx context.Context) {
-	pubsub := ch.psr.Subscribe(ctx, ch.channel.ID)
+func (cm *channelManager) subscribeToChannelMessages(ctx context.Context) {
+	pubsub := cm.psr.Subscribe(ctx, cm.channel.ID)
 	defer pubsub.Close()
 
 	msgs := pubsub.Channel()
 
 	for msg := range msgs {
-		ch.broadcastToClientsInChannel([]byte(msg.Payload))
+		cm.broadcastToClientsInChannel([]byte(msg.Payload))
 	}
 }

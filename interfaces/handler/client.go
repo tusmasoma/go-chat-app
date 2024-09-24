@@ -41,31 +41,36 @@ const (
 
 var newline = []byte{'\n'}
 
-type clientHandler struct {
+type ClientManager interface{}
+
+type clientManager struct {
 	client *entity.Client
 	conn   *websocket.Conn
+	hm     *hubManager
+	send   chan []byte
 	muc    usecase.MessageUseCase
 }
 
-func NewClientHandler(client *entity.Client, conn *websocket.Conn, muc usecase.MessageUseCase) *clientHandler {
-	return &clientHandler{
+func NewclientManager(client *entity.Client, conn *websocket.Conn, muc usecase.MessageUseCase) ClientManager {
+	return &clientManager{
 		client: client,
 		conn:   conn,
+		send:   make(chan []byte, BufferSize),
 		muc:    muc,
 	}
 }
 
-func (ch *clientHandler) ReadPump() {
+func (cm *clientManager) ReadPump() {
 	defer func() {
-		ch.disconnect()
+		cm.disconnect()
 	}()
 
-	ch.conn.SetReadLimit(MaxMessageSize)
-	if err := ch.conn.SetReadDeadline(time.Now().Add(PongWait)); err != nil {
+	cm.conn.SetReadLimit(MaxMessageSize)
+	if err := cm.conn.SetReadDeadline(time.Now().Add(PongWait)); err != nil {
 		log.Error("Failed to set read deadline", log.Ferror(err))
 	}
-	ch.conn.SetPongHandler(func(string) error {
-		err := ch.conn.SetReadDeadline(time.Now().Add(PongWait))
+	cm.conn.SetPongHandler(func(string) error {
+		err := cm.conn.SetReadDeadline(time.Now().Add(PongWait))
 		if err != nil {
 			log.Error("Error setting read deadline", log.Ferror(err))
 			return err
@@ -74,7 +79,7 @@ func (ch *clientHandler) ReadPump() {
 	})
 	// Start endless read loop, waiting for messages from client
 	for {
-		_, jsonMessage, err := ch.conn.ReadMessage()
+		_, jsonMessage, err := cm.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Warn("Unexpected close error", log.Ferror(err))
@@ -84,33 +89,33 @@ func (ch *clientHandler) ReadPump() {
 			break
 		}
 
-		ch.handleNewMessage(jsonMessage)
+		cm.handleNewMessage(jsonMessage)
 	}
 }
 
-func (ch *clientHandler) WritePump() { //nolint: gocognit
+func (cm *clientManager) WritePump() { //nolint: gocognit
 	ticker := time.NewTicker(PingPeriod)
 	defer func() {
 		ticker.Stop()
-		ch.conn.Close()
+		cm.conn.Close()
 	}()
 
 	for {
 		select {
-		case message, ok := <-ch.client.Send:
-			if err := ch.conn.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
+		case message, ok := <-cm.send:
+			if err := cm.conn.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
 				log.Error("Failed to set write deadline", log.Ferror(err))
 				return
 			}
 			if !ok {
 				// The Hub closed the channel.
-				if err := ch.conn.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
+				if err := cm.conn.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
 					log.Warn("Failed to write close message", log.Ferror(err))
 				}
 				return
 			}
 
-			w, err := ch.conn.NextWriter(websocket.TextMessage)
+			w, err := cm.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				log.Error("Failed to get next writer", log.Ferror(err))
 				return
@@ -122,13 +127,13 @@ func (ch *clientHandler) WritePump() { //nolint: gocognit
 			}
 
 			// Attach queued chat messages to the current websocket message.
-			n := len(ch.client.Send)
+			n := len(cm.send)
 			for i := 0; i < n; i++ {
 				if _, err = w.Write(newline); err != nil {
 					log.Error("Failed to write newline", log.Ferror(err))
 					return
 				}
-				if _, err = w.Write(<-ch.client.Send); err != nil {
+				if _, err = w.Write(<-cm.send); err != nil {
 					log.Error("Failed to write queued message", log.Ferror(err))
 					return
 				}
@@ -139,11 +144,11 @@ func (ch *clientHandler) WritePump() { //nolint: gocognit
 				return
 			}
 		case <-ticker.C:
-			if err := ch.conn.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
+			if err := cm.conn.SetWriteDeadline(time.Now().Add(WriteWait)); err != nil {
 				log.Error("Failed to set write deadline", log.Ferror(err))
 				return
 			}
-			if err := ch.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			if err := cm.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				log.Error("Failed to write ping message", log.Ferror(err))
 				return
 			}
@@ -151,17 +156,17 @@ func (ch *clientHandler) WritePump() { //nolint: gocognit
 	}
 }
 
-func (ch *clientHandler) disconnect() {
-	ch.client.Hub.UnRegister <- ch.client
-	close(ch.client.Send)
-	if err := ch.conn.Close(); err != nil {
+func (cm *clientManager) disconnect() {
+	cm.hm.unregister <- cm.client
+	close(cm.send)
+	if err := cm.conn.Close(); err != nil {
 		log.Warn("Failed to close connection", log.Ferror(err))
 	} else {
-		log.Info("Client disconnected successfully", log.Fstring("clientID", ch.client.ID))
+		log.Info("Client disconnected successfully", log.Fstring("clientID", cm.client.ID))
 	}
 }
 
-func (ch *clientHandler) handleNewMessage(jsonMessage []byte) {
+func (cm *clientManager) handleNewMessage(jsonMessage []byte) {
 	ctx := context.Background()
 
 	var message entity.Message
@@ -170,31 +175,31 @@ func (ch *clientHandler) handleNewMessage(jsonMessage []byte) {
 		return
 	}
 
-	message.SenderID = ch.client.UserID
+	message.SenderID = cm.client.UserID
 
-	ch.routeMessageAction(ctx, message)
+	cm.routeMessageAction(ctx, message)
 }
 
-func (ch *clientHandler) routeMessageAction(ctx context.Context, message entity.Message) {
+func (cm *clientManager) routeMessageAction(ctx context.Context, message entity.Message) {
 	switch message.Action {
 	case entity.CreateMessageAction:
-		ch.muc.CreateMessage(ctx, &message)
-		ch.broadcastMessage(message.TargetID, &message)
+		cm.muc.CreateMessage(ctx, &message)
+		cm.broadcastMessage(message.TargetID, &message)
 	case entity.UpdateMessageAction:
-		ch.muc.UpdateMessage(ctx, &message)
-		ch.broadcastMessage(message.TargetID, &message)
+		cm.muc.UpdateMessage(ctx, &message)
+		cm.broadcastMessage(message.TargetID, &message)
 	case entity.DeleteMessageAction:
-		ch.muc.DeleteMessage(ctx, &message)
-		ch.broadcastMessage(message.TargetID, &message)
+		cm.muc.DeleteMessage(ctx, &message)
+		cm.broadcastMessage(message.TargetID, &message)
 	default:
 		log.Warn("Unknown message action", log.Fstring("action", message.Action))
 	}
 }
 
-func (ch *clientHandler) broadcastMessage(channelID string, message *entity.Message) {
-	if channel := ch.client.Hub.FindChannelByID(channelID); channel != nil {
+func (cm *clientManager) broadcastMessage(channelID string, message *entity.Message) {
+	if channel := cm.hm.findChannelManagerByChannelID(channelID); channel != nil {
 		log.Info("Broadcasting message", log.Fstring("channelID", channelID), log.Fstring("messageID", message.ID))
-		channel.Broadcast <- message
+		channel.broadcast <- message
 	} else {
 		log.Warn("Channel not found", log.Fstring("channelID", channelID))
 	}

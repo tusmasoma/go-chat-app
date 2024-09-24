@@ -8,13 +8,10 @@ import (
 )
 
 type Hub struct {
-	ID         string
-	Name       string
-	Clients    map[*Client]bool
-	Channels   map[*Channel]bool
-	Register   chan *Client
-	UnRegister chan *Client
-	Broadcast  chan []byte
+	ID       string
+	Name     string
+	Clients  map[*Client]bool
+	Channels map[*Channel]bool
 }
 
 func NewHub(id, name string) (*Hub, error) {
@@ -26,13 +23,10 @@ func NewHub(id, name string) (*Hub, error) {
 		return nil, errors.New("name is required")
 	}
 	return &Hub{
-		ID:         id,
-		Name:       name,
-		Clients:    make(map[*Client]bool),
-		Channels:   make(map[*Channel]bool),
-		Register:   make(chan *Client),
-		UnRegister: make(chan *Client),
-		Broadcast:  make(chan []byte),
+		ID:       id,
+		Name:     name,
+		Clients:  make(map[*Client]bool),
+		Channels: make(map[*Channel]bool),
 	}, nil
 }
 
@@ -41,9 +35,6 @@ func (h *Hub) RegisterClient(client *Client) {
 }
 
 func (h *Hub) UnRegisterClient(client *Client) {
-	for channel := range client.Channels {
-		channel.UnRegister <- client
-	}
 	delete(h.Clients, client)
 }
 

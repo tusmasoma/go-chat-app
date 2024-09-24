@@ -8,13 +8,10 @@ import (
 )
 
 type Channel struct {
-	ID         string
-	Name       string
-	Private    bool
-	Clients    map[*Client]bool
-	Register   chan *Client
-	UnRegister chan *Client
-	Broadcast  chan *Message
+	ID      string
+	Name    string
+	Private bool
+	Clients map[*Client]bool
 }
 
 func NewChannel(id, name string, private bool) (*Channel, error) {
@@ -26,13 +23,10 @@ func NewChannel(id, name string, private bool) (*Channel, error) {
 		return nil, errors.New("name is required")
 	}
 	return &Channel{
-		ID:         id,
-		Name:       name,
-		Private:    private,
-		Clients:    make(map[*Client]bool),
-		Register:   make(chan *Client),
-		UnRegister: make(chan *Client),
-		// broadcast:  make(chan *WSMessage),
+		ID:      id,
+		Name:    name,
+		Private: private,
+		Clients: make(map[*Client]bool),
 	}, nil
 }
 
