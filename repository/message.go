@@ -7,7 +7,7 @@ import (
 )
 
 type MessageRepository interface {
-	List(ctx context.Context) (entity.Messages, error)
+	List(ctx context.Context, channleID string) (*entity.Messages, error)
 	Get(ctx context.Context, id string) (*entity.Message, error)
 	Create(ctx context.Context, message entity.Message) error
 	Update(ctx context.Context, message entity.Message) error
