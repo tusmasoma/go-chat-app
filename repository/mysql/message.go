@@ -18,6 +18,10 @@ type messageModel struct {
 	CreatedAt    time.Time `gorm:"column:created_at"`
 }
 
+func (messageModel) TableName() string {
+	return "Messages"
+}
+
 type messageRepository struct {
 	db *gorm.DB
 }
