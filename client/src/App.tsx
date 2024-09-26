@@ -1,18 +1,23 @@
 import React from 'react';
 import './globals.css';
-import { Providers } from './components/Providers';
-import Home from './pages/Home';
+import { BrowserRouter as Router, Route, Routes, useParams } from 'react-router-dom';
+import Chat from './pages/Chat'; // Chat.tsx のインポート
 
 const App: React.FC = () => {
   return (
-    <div className="min-h-screen antialiased">
-      <Providers>
-        <main className="h-screen dark text-foreground bg-background">
-          <Home />
-        </main>
-      </Providers>
-    </div>
+    <Router>
+      <Routes>
+        {/* URLが"/chat/:url"のときにChatコンポーネントを表示 */}
+        <Route path="/chat/:url" element={<ChatWrapperWithParams />} />
+      </Routes>
+    </Router>
   );
+};
+
+// useParamsを使ってURLパラメータを取得し、Chatコンポーネントに渡す
+const ChatWrapperWithParams: React.FC = () => {
+  const params = useParams<{ url: string }>(); // React RouterでURLパラメータを取得
+  return <Chat params={{ url: params.url }} />;
 };
 
 export default App;
