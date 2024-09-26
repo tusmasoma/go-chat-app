@@ -9,8 +9,7 @@ DROP TABLE IF EXISTS Workspaces CASCADE;
 
 CREATE TABLE Workspaces (
     id CHAR(36) PRIMARY KEY, -- UUIDは36文字の文字列として格納されます
-    name VARCHAR(50) NOT NULL,
-    description TEXT
+    name VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE Channels (
@@ -18,7 +17,6 @@ CREATE TABLE Channels (
     workspace_id CHAR(36) NOT NULL,
     name VARCHAR(50) NOT NULL,
     private BOOLEAN NOT NULL,
-    description TEXT,
     UNIQUE (workspace_id, name)
 );
 
