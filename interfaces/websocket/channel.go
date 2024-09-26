@@ -9,7 +9,7 @@ import (
 	"github.com/tusmasoma/go-chat-app/repository"
 )
 
-type ChannelManager interface{}
+// type ChannelManager interface{}
 
 type channelManager struct {
 	channel        *entity.Channel
@@ -20,7 +20,7 @@ type channelManager struct {
 	psr            repository.PubSubRepository
 }
 
-func NewChannelManager(channel *entity.Channel, psr repository.PubSubRepository) ChannelManager {
+func NewChannelManager(channel *entity.Channel, psr repository.PubSubRepository) *channelManager {
 	return &channelManager{
 		channel:    channel,
 		register:   make(chan *entity.Client),

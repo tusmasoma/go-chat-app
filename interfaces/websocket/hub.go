@@ -1,6 +1,8 @@
 package websocket
 
 import (
+	"context"
+
 	"github.com/tusmasoma/go-chat-app/entity"
 )
 
@@ -24,7 +26,7 @@ func NewHubManager(hub *entity.Hub) HubManager {
 	}
 }
 
-func (hm *HubManager) Run() {
+func (hm *HubManager) Run(ctx context.Context) {
 	for {
 		select {
 		case client := <-hm.Register:
@@ -61,4 +63,10 @@ func (hm *HubManager) findChannelManagerByChannelID(channelID string) *channelMa
 		}
 	}
 	return nil
+}
+
+func (hm *HubManager) RegisterChannel(ctx context.Context, channel *entity.Channel) {
+	cm := NewChannelManager(channel, nil)
+	go cm.Run(ctx)
+	hm.channelManagers[cm] = true
 }

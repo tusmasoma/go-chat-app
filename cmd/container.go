@@ -72,7 +72,7 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 	return container, nil
 }
 
-func generateHubManager() *websocket.HubManager {
+func generateHubManager(ctx context.Context) *websocket.HubManager {
 	//  現状、Workspaceは一つの為、containerにてHubManagerを生成して、DIする
 	workspaceID := os.Getenv("WORKSPACE_ID")
 	if workspaceID == "" {
@@ -86,7 +86,7 @@ func generateHubManager() *websocket.HubManager {
 	}
 	hm := websocket.NewHubManager(hub)
 
-	go hm.Run()
+	go hm.Run(ctx)
 
 	log.Info("HubManager created successfully")
 
