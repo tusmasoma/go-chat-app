@@ -2,6 +2,10 @@ package config
 
 import "time"
 
+type ContextKey string
+
+const ContextUserIDKey ContextKey = "userID"
+
 const (
 	// Max wait time when writing a message to the peer.
 	WriteWait = 10 * time.Second

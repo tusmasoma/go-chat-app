@@ -1,4 +1,4 @@
-package handler
+package websocket
 
 import (
 	"context"
@@ -15,17 +15,20 @@ import (
 
 var newline = []byte{'\n'}
 
-type ClientManager interface{}
+type ClientManager interface {
+	ReadPump()
+	WritePump()
+}
 
 type clientManager struct {
 	client *entity.Client
 	conn   *websocket.Conn
-	hm     *hubManager
+	hm     *HubManager
 	send   chan []byte
 	muc    usecase.MessageUseCase
 }
 
-func NewclientManager(client *entity.Client, conn *websocket.Conn, muc usecase.MessageUseCase) ClientManager {
+func NewClientManager(client *entity.Client, conn *websocket.Conn, muc usecase.MessageUseCase) ClientManager {
 	return &clientManager{
 		client: client,
 		conn:   conn,

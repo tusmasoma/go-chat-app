@@ -1,33 +1,33 @@
-package handler
+package websocket
 
 import (
 	"github.com/tusmasoma/go-chat-app/entity"
 )
 
-type HubManager interface{}
+// type HubManager interface{}
 
-type hubManager struct {
-	hub             *entity.Hub
+type HubManager struct {
+	Hub             *entity.Hub
 	clientManagers  map[*clientManager]bool
 	channelManagers map[*channelManager]bool
-	register        chan *entity.Client
+	Register        chan *entity.Client
 	unregister      chan *entity.Client
 	broadcast       chan []byte
 }
 
 func NewHubHandler(hub *entity.Hub) HubManager {
-	return &hubManager{
-		hub:        hub,
-		register:   make(chan *entity.Client),
+	return HubManager{
+		Hub:        hub,
+		Register:   make(chan *entity.Client),
 		unregister: make(chan *entity.Client),
 		broadcast:  make(chan []byte),
 	}
 }
 
-func (hm *hubManager) Run() {
+func (hm *HubManager) Run() {
 	for {
 		select {
-		case client := <-hm.register:
+		case client := <-hm.Register:
 			hm.registerClient(client)
 		case client := <-hm.unregister:
 			hm.unregisterClient(client)
@@ -37,24 +37,24 @@ func (hm *hubManager) Run() {
 	}
 }
 
-func (hm *hubManager) registerClient(client *entity.Client) {
-	hm.hub.RegisterClient(client)
+func (hm *HubManager) registerClient(client *entity.Client) {
+	hm.Hub.RegisterClient(client)
 }
 
-func (hm *hubManager) unregisterClient(client *entity.Client) {
+func (hm *HubManager) unregisterClient(client *entity.Client) {
 	for cm := range hm.channelManagers {
 		cm.unregister <- client
 	}
-	hm.hub.UnRegisterClient(client)
+	hm.Hub.UnRegisterClient(client)
 }
 
-func (hm *hubManager) broadcastToClients(message []byte) {
+func (hm *HubManager) broadcastToClients(message []byte) {
 	for cm := range hm.clientManagers {
 		cm.send <- message
 	}
 }
 
-func (hm *hubManager) findChannelManagerByChannelID(channelID string) *channelManager {
+func (hm *HubManager) findChannelManagerByChannelID(channelID string) *channelManager {
 	for cm := range hm.channelManagers {
 		if cm.channel.ID == channelID {
 			return cm
