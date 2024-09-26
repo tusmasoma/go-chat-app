@@ -31,10 +31,18 @@ func NewHub(id, name string) (*Hub, error) {
 }
 
 func (h *Hub) RegisterClient(client *Client) {
+	if client == nil {
+		log.Error("client is required")
+		return
+	}
 	h.Clients[client] = true
 }
 
 func (h *Hub) UnRegisterClient(client *Client) {
+	if client == nil {
+		log.Error("client is required")
+		return
+	}
 	delete(h.Clients, client)
 }
 
