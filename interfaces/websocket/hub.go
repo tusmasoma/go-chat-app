@@ -15,7 +15,7 @@ type HubManager struct {
 	broadcast       chan []byte
 }
 
-func NewHubHandler(hub *entity.Hub) HubManager {
+func NewHubManager(hub *entity.Hub) HubManager {
 	return HubManager{
 		Hub:        hub,
 		Register:   make(chan *entity.Client),

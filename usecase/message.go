@@ -20,7 +20,7 @@ type messageUseCase struct {
 	mr repository.MessageRepository
 }
 
-func NewClientActionsUseCase(mr repository.MessageRepository) MessageUseCase {
+func NewMessageUseCase(mr repository.MessageRepository) MessageUseCase {
 	return &messageUseCase{
 		mr: mr,
 	}
