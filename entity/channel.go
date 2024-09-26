@@ -31,10 +31,16 @@ func NewChannel(id, name string, private bool) (*Channel, error) {
 }
 
 func (c *Channel) RegisterClientInChannel(client *Client) {
+	if client == nil {
+		return
+	}
 	c.Clients[client] = true
 }
 
 func (c *Channel) UnRegisterClientInChannel(client *Client) {
+	if client == nil {
+		return
+	}
 	delete(c.Clients, client)
 }
 

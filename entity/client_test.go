@@ -116,7 +116,7 @@ func TestEntity_NewClient(t *testing.T) {
 	}
 }
 
-func TestClient_JoinChannel(t *testing.T) {
+func TestEntity_Client_JoinChannel(t *testing.T) {
 	t.Parallel()
 
 	channle1 := &Channel{
@@ -188,7 +188,7 @@ func TestClient_JoinChannel(t *testing.T) {
 	}
 }
 
-func TestClient_LeaveChannel(t *testing.T) {
+func TestEntity_Client_LeaveChannel(t *testing.T) {
 	t.Parallel()
 
 	channle1 := &Channel{

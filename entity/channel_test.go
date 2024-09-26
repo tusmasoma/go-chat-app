@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestEntity_NewHub(t *testing.T) {
+func TestEntity_NewChannel(t *testing.T) {
 	t.Parallel()
 
 	id := uuid.New().String()
@@ -17,32 +17,35 @@ func TestEntity_NewHub(t *testing.T) {
 	patterns := []struct {
 		name string
 		arg  struct {
-			id   string
-			name string
+			id      string
+			name    string
+			private bool
 		}
 		want struct {
-			hub *Hub
-			err error
+			channel *Channel
+			err     error
 		}
 	}{
 		{
 			name: "Success: id is not empty",
 			arg: struct {
-				id   string
-				name string
+				id      string
+				name    string
+				private bool
 			}{
-				id:   id,
-				name: "name",
+				id:      id,
+				name:    "channel",
+				private: false,
 			},
 			want: struct {
-				hub *Hub
-				err error
+				channel *Channel
+				err     error
 			}{
-				hub: &Hub{
-					ID:       id,
-					Name:     "name",
-					Clients:  make(map[*Client]bool),
-					Channels: make(map[*Channel]bool),
+				channel: &Channel{
+					ID:      id,
+					Name:    "channel",
+					Private: false,
+					Clients: make(map[*Client]bool),
 				},
 				err: nil,
 			},
@@ -50,20 +53,22 @@ func TestEntity_NewHub(t *testing.T) {
 		{
 			name: "Success: id is empty",
 			arg: struct {
-				id   string
-				name string
+				id      string
+				name    string
+				private bool
 			}{
-				id:   "",
-				name: "name",
+				id:      "",
+				name:    "channel",
+				private: false,
 			},
 			want: struct {
-				hub *Hub
-				err error
+				channel *Channel
+				err     error
 			}{
-				hub: &Hub{
-					Name:     "name",
-					Clients:  make(map[*Client]bool),
-					Channels: make(map[*Channel]bool),
+				channel: &Channel{
+					Name:    "channel",
+					Private: false,
+					Clients: make(map[*Client]bool),
 				},
 				err: nil,
 			},
@@ -71,18 +76,20 @@ func TestEntity_NewHub(t *testing.T) {
 		{
 			name: "Fail: name is empty",
 			arg: struct {
-				id   string
-				name string
+				id      string
+				name    string
+				private bool
 			}{
-				id:   id,
-				name: "",
+				id:      id,
+				name:    "",
+				private: false,
 			},
 			want: struct {
-				hub *Hub
-				err error
+				channel *Channel
+				err     error
 			}{
-				hub: nil,
-				err: errors.New("name is required"),
+				channel: nil,
+				err:     errors.New("name is required"),
 			},
 		},
 	}
@@ -92,22 +99,22 @@ func TestEntity_NewHub(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			hub, err := NewHub(tt.arg.id, tt.arg.name)
+			channel, err := NewChannel(tt.arg.id, tt.arg.name, tt.arg.private)
 
 			if (err != nil) != (tt.want.err != nil) {
-				t.Errorf("NewHub() error = %v, wantErr %v", err, tt.want.err)
+				t.Errorf("NewChannel() error = %v, wantErr %v", err, tt.want.err)
 			} else if err != nil && tt.want.err != nil && err.Error() != tt.want.err.Error() {
-				t.Errorf("NewHub() error = %v, wantErr %v", err, tt.want.err)
+				t.Errorf("NewChannel() error = %v, wantErr %v", err, tt.want.err)
 			}
 
-			if d := cmp.Diff(hub, tt.want.hub, cmpopts.IgnoreFields(Hub{}, "ID")); len(d) != 0 {
-				t.Errorf("NewHub() mismatch (-got +want):\n%s", d)
+			if d := cmp.Diff(channel, tt.want.channel, cmpopts.IgnoreFields(Channel{}, "ID")); len(d) != 0 {
+				t.Errorf("NewChannel() mismatch (-got +want):\n%s", d)
 			}
 		})
 	}
 }
 
-func TestEntity_Hub_RegisterClient(t *testing.T) {
+func TestEntity_Channel_RegisterClientInChannel(t *testing.T) {
 	t.Parallel()
 
 	clientID := uuid.New().String()
@@ -124,7 +131,7 @@ func TestEntity_Hub_RegisterClient(t *testing.T) {
 			client *Client
 		}
 		want struct {
-			hub *Hub
+			channel *Channel
 		}
 	}{
 		{
@@ -135,9 +142,9 @@ func TestEntity_Hub_RegisterClient(t *testing.T) {
 				client: client1,
 			},
 			want: struct {
-				hub *Hub
+				channel *Channel
 			}{
-				hub: &Hub{
+				channel: &Channel{
 					Clients: map[*Client]bool{
 						client1: true,
 					},
@@ -152,9 +159,9 @@ func TestEntity_Hub_RegisterClient(t *testing.T) {
 				client: nil,
 			},
 			want: struct {
-				hub *Hub
+				channel *Channel
 			}{
-				hub: &Hub{
+				channel: &Channel{
 					Clients: make(map[*Client]bool),
 				},
 			},
@@ -166,20 +173,20 @@ func TestEntity_Hub_RegisterClient(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			hub := &Hub{
+			channel := &Channel{
 				Clients: make(map[*Client]bool),
 			}
 
-			hub.RegisterClient(tt.arg.client)
+			channel.RegisterClientInChannel(tt.arg.client)
 
-			if d := cmp.Diff(hub.Clients, tt.want.hub.Clients); len(d) != 0 {
-				t.Errorf("RegisterClient() mismatch (-got +want):\n%s", d)
+			if d := cmp.Diff(channel.Clients, tt.want.channel.Clients); len(d) != 0 {
+				t.Errorf("RegisterClientInChannel() mismatch (-got +want):\n%s", d)
 			}
 		})
 	}
 }
 
-func TestEntity_Hub_UnRegisterClient(t *testing.T) {
+func TestEntity_Channel_UnRegisterClientInChannel(t *testing.T) {
 	t.Parallel()
 
 	clientID := uuid.New().String()
@@ -196,7 +203,7 @@ func TestEntity_Hub_UnRegisterClient(t *testing.T) {
 			client *Client
 		}
 		want struct {
-			hub *Hub
+			channel *Channel
 		}
 	}{
 		{
@@ -207,9 +214,9 @@ func TestEntity_Hub_UnRegisterClient(t *testing.T) {
 				client: client1,
 			},
 			want: struct {
-				hub *Hub
+				channel *Channel
 			}{
-				hub: &Hub{
+				channel: &Channel{
 					Clients: make(map[*Client]bool),
 				},
 			},
@@ -222,9 +229,9 @@ func TestEntity_Hub_UnRegisterClient(t *testing.T) {
 				client: nil,
 			},
 			want: struct {
-				hub *Hub
+				channel *Channel
 			}{
-				hub: &Hub{
+				channel: &Channel{
 					Clients: map[*Client]bool{
 						client1: true,
 					},
@@ -238,34 +245,35 @@ func TestEntity_Hub_UnRegisterClient(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			hub := &Hub{
+			channel := &Channel{
 				Clients: map[*Client]bool{
 					client1: true,
 				},
 			}
 
-			hub.UnRegisterClient(tt.arg.client)
+			channel.UnRegisterClientInChannel(tt.arg.client)
 
-			if d := cmp.Diff(hub.Clients, tt.want.hub.Clients); len(d) != 0 {
-				t.Errorf("UnRegisterClient() mismatch (-got +want):\n%s", d)
+			if d := cmp.Diff(channel.Clients, tt.want.channel.Clients); len(d) != 0 {
+				t.Errorf("UnRegisterClientInChannel() mismatch (-got +want):\n%s", d)
 			}
 		})
 	}
 }
 
-func TestEntity_Hub_FindChannelByID(t *testing.T) {
+func TestEntity_Channel_FindClientByID(t *testing.T) {
 	t.Parallel()
 
-	channelID := uuid.New().String()
-	channel1, _ := NewChannel(
-		channelID,
-		"name",
-		false,
+	clientID := uuid.New().String()
+	userID := uuid.New().String()
+	client1, _ := NewClient(
+		clientID,
+		userID,
+		nil,
 	)
 
-	hub := &Hub{
-		Channels: map[*Channel]bool{
-			channel1: true,
+	channel := &Channel{
+		Clients: map[*Client]bool{
+			client1: true,
 		},
 	}
 
@@ -275,7 +283,7 @@ func TestEntity_Hub_FindChannelByID(t *testing.T) {
 			id string
 		}
 		want struct {
-			channel *Channel
+			client *Client
 		}
 	}{
 		{
@@ -283,25 +291,25 @@ func TestEntity_Hub_FindChannelByID(t *testing.T) {
 			arg: struct {
 				id string
 			}{
-				id: channelID,
+				id: clientID,
 			},
 			want: struct {
-				channel *Channel
+				client *Client
 			}{
-				channel: channel1,
+				client: client1,
 			},
 		},
 		{
-			name: "Fail: channel is not found",
+			name: "Fail: client is not found",
 			arg: struct {
 				id string
 			}{
 				id: uuid.New().String(),
 			},
 			want: struct {
-				channel *Channel
+				client *Client
 			}{
-				channel: nil,
+				client: nil,
 			},
 		},
 	}
@@ -311,64 +319,65 @@ func TestEntity_Hub_FindChannelByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			channel := hub.FindChannelByID(tt.arg.id)
+			client := channel.FindClientByID(tt.arg.id)
 
-			if d := cmp.Diff(channel, tt.want.channel); len(d) != 0 {
-				t.Errorf("FindChannelByID() mismatch (-got +want):\n%s", d)
+			if d := cmp.Diff(client, tt.want.client); len(d) != 0 {
+				t.Errorf("FindClientByID() mismatch (-got +want):\n%s", d)
 			}
 		})
 	}
 }
 
-func TestEntity_Hub_FindChannelByName(t *testing.T) {
+func TestEntity_Channel_FindClientByUserID(t *testing.T) {
 	t.Parallel()
 
-	channelID := uuid.New().String()
-	channel1, _ := NewChannel(
-		channelID,
-		"channel1",
-		false,
+	clientID := uuid.New().String()
+	userID := uuid.New().String()
+	client1, _ := NewClient(
+		clientID,
+		userID,
+		nil,
 	)
 
-	hub := &Hub{
-		Channels: map[*Channel]bool{
-			channel1: true,
+	channel := &Channel{
+		Clients: map[*Client]bool{
+			client1: true,
 		},
 	}
 
 	patterns := []struct {
 		name string
 		arg  struct {
-			name string
+			userID string
 		}
 		want struct {
-			channel *Channel
+			client *Client
 		}
 	}{
 		{
 			name: "Success",
 			arg: struct {
-				name string
+				userID string
 			}{
-				name: "channel1",
+				userID: userID,
 			},
 			want: struct {
-				channel *Channel
+				client *Client
 			}{
-				channel: channel1,
+				client: client1,
 			},
 		},
 		{
 			name: "Fail: channel is not found",
 			arg: struct {
-				name string
+				userID string
 			}{
-				name: "channel2",
+				userID: uuid.New().String(),
 			},
 			want: struct {
-				channel *Channel
+				client *Client
 			}{
-				channel: nil,
+				client: nil,
 			},
 		},
 	}
@@ -378,10 +387,10 @@ func TestEntity_Hub_FindChannelByName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			channel := hub.FindChannelByName(tt.arg.name)
+			client := channel.FindClientByUserID(tt.arg.userID)
 
-			if d := cmp.Diff(channel, tt.want.channel); len(d) != 0 {
-				t.Errorf("FindChannelByName() mismatch (-got +want):\n%s", d)
+			if d := cmp.Diff(client, tt.want.client); len(d) != 0 {
+				t.Errorf("FindClientByUserID() mismatch (-got +want):\n%s", d)
 			}
 		})
 	}
