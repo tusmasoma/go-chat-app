@@ -1,17 +1,26 @@
-import { type Message as TMessage } from "ai/react";
-import { Message } from "./Message";
-import { MessageSquare } from "lucide-react";
+import React from 'react';
+import { Message as MessageComponent } from './Message';
+import { MessageSquare } from 'lucide-react';
+
+interface TMessage {
+  content: string;
+  role: 'user' | 'system' | 'assistant'; // 例: roleを必要に応じて定義
+}
 
 interface MessagesProps {
   messages: TMessage[];
 }
 
-export const Messages = ({ messages }: MessagesProps) => {
+export const Messages: React.FC<MessagesProps> = ({ messages }) => {
   return (
     <div className="flex max-h-[calc(100vh-3.5rem-7rem)] flex-1 flex-col overflow-y-auto">
       {messages.length ? (
         messages.map((message, i) => (
-          <Message key={i} content={message.content} isUserMessage={message.role === "user"} />
+          <MessageComponent
+            key={i}
+            content={message.content}
+            isUserMessage={message.role === 'user'}
+          />
         ))
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-2">

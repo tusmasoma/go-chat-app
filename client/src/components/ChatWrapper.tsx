@@ -1,21 +1,44 @@
-"use client";
+import React, { useState, useEffect } from 'react';
+import { Message } from '../types/Message'; // メッセージの型は適宜定義
+import { Messages } from './Messages';
+import { ChatInput } from './ChatInput';
 
-import { Message, useChat } from "ai/react";
-import { Messages } from "./Messages";
-import { ChatInput } from "./ChatInput";
-
-export const ChatWrapper = ({
-  sessionId,
-  initialMessages,
-}: {
+interface ChatWrapperProps {
   sessionId: string;
   initialMessages: Message[];
+}
+
+export const ChatWrapper: React.FC<ChatWrapperProps> = ({
+  sessionId,
+  initialMessages,
 }) => {
-  const { messages, handleInputChange, handleSubmit, input, setInput } = useChat({
-    api: "/api/chat-stream",
-    body: { sessionId },
-    initialMessages,
-  });
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [input, setInput] = useState<string>('');
+
+  const handleInputChange = (e: React.ChangeEvent<any>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // メッセージの送信ロジックをここに実装
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: input,
+      role: 'user', // 送信者を指定
+    };
+
+    // メッセージの状態を更新
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    // 送信後に入力をクリア
+    setInput('');
+  };
+
+  useEffect(() => {
+    // sessionIdを使ってサーバーからのメッセージ取得ロジックを実装
+  }, [sessionId]);
 
   return (
     <div className="relative min-h-full bg-zinc-900 flex divide-y divide-zinc-700 flex-col justify-between gap-2">

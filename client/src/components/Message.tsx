@@ -1,15 +1,16 @@
-import { cn } from "@/lib/utils";
+import React from 'react';
 import { Bot, User } from "lucide-react";
+import classNames from 'classnames'; // classnames パッケージを使用
 
 interface MessageProps {
   content: string;
   isUserMessage: boolean;
 }
 
-export const Message = ({ content, isUserMessage }: MessageProps) => {
+export const Message: React.FC<MessageProps> = ({ content, isUserMessage }) => {
   return (
     <div
-      className={cn({
+      className={classNames({
         "bg-zinc-800": isUserMessage,
         "bg-zinc-900/25": !isUserMessage,
       })}
@@ -17,7 +18,7 @@ export const Message = ({ content, isUserMessage }: MessageProps) => {
       <div className="p-6">
         <div className="max-w-3xl mx-auto flex items-start gap-2.5">
           <div
-            className={cn(
+            className={classNames(
               "size-10 shrink-0 aspect-square rounded-full border border-zinc-700 bg-zinc-900 flex justify-center items-center",
               {
                 "bg-blue-950 border-blue-700 text-zinc-200": isUserMessage,
