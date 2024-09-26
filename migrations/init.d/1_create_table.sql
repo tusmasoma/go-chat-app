@@ -27,7 +27,6 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE Memberships (
-    id CHAR(73) PRIMARY KEY,
     user_id CHAR(36) NOT NULL,
     workspace_id CHAR(36) NOT NULL,
     name VARCHAR(50) NOT NULL,

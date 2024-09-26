@@ -15,18 +15,16 @@ import (
 func Test_MessageRepository(t *testing.T) {
 	ctx := context.Background()
 
-	if err := db.AutoMigrate(&messageModel{}); err != nil { // migrate
-		t.Fatal(err)
-	}
-
 	repo := NewMessageRepository(db)
 
 	userID := uuid.New().String()
+	workspaceID := uuid.New().String()
 	channelID := uuid.New().String()
 
 	msg1, err := entity.NewMessage(
 		uuid.New().String(),
 		userID,
+		workspaceID,
 		"Hello, World!",
 		entity.CreateMessageAction,
 		channelID,
@@ -37,6 +35,7 @@ func Test_MessageRepository(t *testing.T) {
 	msg2, err := entity.NewMessage(
 		uuid.New().String(),
 		userID,
+		workspaceID,
 		"Hello, World! 2",
 		entity.CreateMessageAction,
 		channelID,

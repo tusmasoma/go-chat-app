@@ -11,10 +11,6 @@ import (
 func Test_UserRepository(t *testing.T) {
 	ctx := context.Background()
 
-	if err := db.AutoMigrate(&userModel{}); err != nil { // migrate
-		t.Fatal(err)
-	}
-
 	repo := NewUserRepository(db)
 
 	hashPassword, _ := entity.PasswordEncrypt("password")
