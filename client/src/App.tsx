@@ -1,5 +1,5 @@
+import './output.css';
 import React from 'react';
-import './globals.css';
 import { BrowserRouter as Router, Route, Routes, useParams } from 'react-router-dom';
 import Chat from './pages/Chat'; // Chat.tsx のインポート
 
