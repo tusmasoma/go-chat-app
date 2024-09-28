@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import InputForm from '../components/inputForm';
 import Messages,{ CustomMessage } from '../components/messages';
 
@@ -6,6 +6,9 @@ const Home = () => {
     const [messages, setMessages] = useState<CustomMessage[]>([]); // メッセージのリスト
     const [input, setInput] = useState(''); // 入力内容
     const [isLoading, setIsLoading] = useState(false); // ローディング状態
+    const [bottomPadding, setBottomPadding] = useState(0); // メッセージの高さに基づいた余白
+    const lastMessageRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // 入力内容が変わったときのハンドラー
     const handleInputChange = (
@@ -54,17 +57,42 @@ const Home = () => {
       setIsLoading(false);
     };
 
+    useEffect(() => {
+      if (lastMessageRef.current) {
+        // 最新メッセージの高さに基づいて余白を設定
+        messagesEndRef.current!.style.paddingBottom = `100px`;
+      }
+    }, [messages]);
+
+    // 最新メッセージにスクロール
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
+    useEffect(() => {
+      scrollToBottom();
+    }, [messages]);
+
   return (
     <main className="flex flex-col items-center min-h-screen p-12 text-lg">
-      <div className="flex flex-col w-full max-w-2xl h-full flex-grow overflow-y-auto">
-        <Messages messages={messages} isLoading={isLoading} />
+      <div className="flex flex-col w-full max-w-2xl h-full flex-grow overflow-y-auto" style={{ paddingBottom: `${bottomPadding}px` }}>
+        <div>
+          <Messages messages={messages} isLoading={isLoading} /> {/* メッセージ全体を1回だけ表示 */}
+        </div>
+        <div ref={lastMessageRef}>
+          {/* 最後のメッセージ位置に ref を設定 */}
+          <div ref={lastMessageRef} /> {/* 最新メッセージの位置を監視 */}
+        </div>
+        <div ref={messagesEndRef} /> {/* 最新メッセージ位置の参照 */}
       </div>
       <InputForm
         input={input}
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
         isLoading={isLoading}
-        stop={stop}
+        stop={() => setIsLoading(false)}
       />
     </main>
   );
