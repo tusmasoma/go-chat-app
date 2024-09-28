@@ -20,7 +20,7 @@ type channelManager struct {
 	psr            repository.PubSubRepository
 }
 
-func NewChannelManager(channel *entity.Channel, psr repository.PubSubRepository) *channelManager {
+func NewChannelManager(channel *entity.Channel, psr repository.PubSubRepository) *channelManager { //nolint:revive // This function is used in other packages
 	return &channelManager{
 		channel:    channel,
 		register:   make(chan *entity.Client),

@@ -26,7 +26,7 @@ func NewHubManager(hub *entity.Hub) HubManager {
 	}
 }
 
-func (hm *HubManager) Run(ctx context.Context) {
+func (hm *HubManager) Run() {
 	for {
 		select {
 		case client := <-hm.Register:
