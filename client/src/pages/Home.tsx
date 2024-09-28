@@ -55,7 +55,10 @@ const Home = () => {
     };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-12 text-lg">
+    <main className="flex flex-col items-center min-h-screen p-12 text-lg">
+      <div className="flex flex-col w-full max-w-2xl h-full flex-grow overflow-y-auto">
+        <Messages messages={messages} isLoading={isLoading} />
+      </div>
       <InputForm
         input={input}
         handleInputChange={handleInputChange}
@@ -63,7 +66,6 @@ const Home = () => {
         isLoading={isLoading}
         stop={stop}
       />
-      <Messages messages={messages} isLoading={isLoading} />
     </main>
   );
 };
