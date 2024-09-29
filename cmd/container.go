@@ -15,6 +15,7 @@ import (
 	"github.com/tusmasoma/go-chat-app/interfaces/handler"
 	"github.com/tusmasoma/go-chat-app/interfaces/websocket"
 	"github.com/tusmasoma/go-chat-app/repository"
+	"github.com/tusmasoma/go-chat-app/repository/auth"
 	"github.com/tusmasoma/go-chat-app/repository/mysql"
 	"github.com/tusmasoma/go-chat-app/repository/redis"
 	"github.com/tusmasoma/go-chat-app/usecase"
@@ -37,14 +38,20 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 		mysql.NewMySQLDB,
 		mysql.NewTransactionRepository,
 		mysql.NewMessageRepository,
+		mysql.NewUserRepository,
+		mysql.NewMembershipRepository,
+		auth.NewAuthRepository,
 		redis.NewRedisClient,
 		redis.NewPubSubRepository,
 		usecase.NewMessageUseCase,
+		usecase.NewUserUseCase,
 		generateHubManager,
 		handler.NewWebsocketHandler,
+		handler.NewUserHandler,
 		func(
 			serverConfig *config.ServerConfig,
 			wsHandler *handler.WebsocketHandler,
+			userHandler handler.UserHandler,
 		) *chi.Mux {
 			r := chi.NewRouter()
 			r.Use(cors.Handler(cors.Options{
@@ -59,6 +66,17 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 
 			r.Group(func(r chi.Router) {
 				r.Get("/ws/{workspace_id}", wsHandler.WebSocket)
+			})
+
+			r.Route("/api", func(r chi.Router) {
+				r.Route("/user", func(r chi.Router) {
+					r.Post("/create", userHandler.CreateUser)
+					// r.Post("/login", userHandler.Login)
+					// r.Group(func(r chi.Router) {
+					// 	r.Use(authMiddleware.Authenticate)
+					// 	r.Get("/logout", userHandler.Logout)
+					// })
+				})
 			})
 
 			return r

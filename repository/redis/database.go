@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/tusmasoma/go-chat-app/config"
 	"github.com/tusmasoma/go-tech-dojo/pkg/log"
+
+	"github.com/tusmasoma/go-chat-app/config"
 )
 
 func NewRedisClient(ctx context.Context) *redis.Client {

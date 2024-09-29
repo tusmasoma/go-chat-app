@@ -5,9 +5,10 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/tusmasoma/go-tech-dojo/pkg/log"
+
 	ws "github.com/tusmasoma/go-chat-app/interfaces/websocket"
 	"github.com/tusmasoma/go-chat-app/usecase"
-	"github.com/tusmasoma/go-tech-dojo/pkg/log"
 )
 
 type ChannelHandler interface {
