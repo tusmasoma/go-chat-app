@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import InputForm from '../components/inputForm';
-import Messages,{ CustomMessage } from '../components/messages';
+import InputForm from '../components/chat/inputForm';
+import Messages,{ CustomMessage } from '../components/chat/messages';
 
 const Home = () => {
     const [messages, setMessages] = useState<CustomMessage[]>([]); // メッセージのリスト
