@@ -7,7 +7,8 @@ describe("WebSocket E2E Tests with Go Server", () => {
   let ws: WebSocket; // WebSocketクライアントのインスタンスを保持する変数
   let authToken: string;
   let clientID: string;
-  let channelID: string;
+  let workspaceID: string = "550e8400-e29b-41d4-a716-446655440000";
+  let channelID: string = "123e4567-e89b-12d3-a456-426614174000";
   let msgID: string;
   let membershipIDofMsg: string;
 
@@ -81,198 +82,143 @@ describe("WebSocket E2E Tests with Go Server", () => {
     });
   });
 
-  // // メッセージの送信と受信をテスト
-  // test("TEST: Create Message", (done) => {
-  //   const testMessage = {
-  //     action_tag: "CREATE_MESSAGE",
-  //     target_id: channelID,
-  //     sender_id: clientID,
-  //     content: {
-  //       id: "",
-  //       membership_id: "",
-  //       text: "送信したいメッセージの内容",
-  //       created_at: "2024-06-11T15:48:00Z",
-  //       updated_at: null,
-  //     },
-  //   };
+  // メッセージの送信と受信をテスト
+  test("TEST: Create Message", (done) => {
+    const testMessage = {
+      id: "",
+      user_id: "",
+      workspace_id: workspaceID,
+      text: "送信したいメッセージの内容",
+      created_at: "2024-06-11T15:48:00Z",
+      action: "CREATE_MESSAGE",
+      target_id: channelID,
+      // sender_id: clientID,
+      // membership_id: "",
+    };
 
-  //   ws.once("message", (data) => {
-  //     const receivedMessage = JSON.parse(data.toString());
-  //     if (receivedMessage.action_tag === "CREATE_MESSAGE") {
-  //       expect(receivedMessage.action_tag).toBe(testMessage.action_tag);
-  //       expect(receivedMessage.target_id).toBe(testMessage.target_id);
-  //       //expect(receivedMessage.sender_id).toBe(testMessage.sender_id);
-  //       expect(receivedMessage.content.id).not.toBe("");
-  //       expect(receivedMessage.content.membership_id).not.toBe("");
-  //       expect(receivedMessage.content.text).toBe(testMessage.content.text);
-  //       expect(receivedMessage.content.created_at).toBe(
-  //         testMessage.content.created_at
-  //       );
-  //       console.log("SUCCESS: CREATE_MESSAGE");
-  //       msgID = receivedMessage.content.id;
-  //       membershipIDofMsg = receivedMessage.content.membership_id;
-  //       done();
-  //     }
-  //   });
+    ws.once("message", (data) => {
+      const receivedMessage = JSON.parse(data.toString());
+      if (receivedMessage.action === "CREATE_MESSAGE") {
+        expect(receivedMessage.action).toBe(testMessage.action);
+        expect(receivedMessage.target_id).toBe(testMessage.target_id);
+        //expect(receivedMessage.sender_id).toBe(testMessage.sender_id);
+        expect(receivedMessage.id).not.toBe("");
+        expect(receivedMessage.membership_id).not.toBe("");
+        expect(receivedMessage.text).toBe(testMessage.text);
+        expect(receivedMessage.created_at).toBe(
+          testMessage.created_at
+        );
+        console.log("SUCCESS: CREATE_MESSAGE");
+        msgID = receivedMessage.id;
+        membershipIDofMsg = receivedMessage.membership_id;
+        done();
+      }
+    });
 
-  //   if (ws.readyState === WebSocket.OPEN) {
-  //     ws.send(JSON.stringify(testMessage));
-  //   } else {
-  //     ws.once("open", () => {
-  //       ws.send(JSON.stringify(testMessage));
-  //     });
-  //   }
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(testMessage));
+    } else {
+      ws.once("open", () => {
+        ws.send(JSON.stringify(testMessage));
+      });
+    }
 
-  //   ws.once("error", (error) => {
-  //     console.error("FAIL: CREATE_MESSAGE", error);
-  //     done(error);
-  //   });
-  // });
+    ws.once("error", (error) => {
+      console.error("FAIL: CREATE_MESSAGE", error);
+      done(error);
+    });
+  });
 
-  // // 初回メッセージの取得をテスト
-  // test("TEST: List Messages", (done) => {
-  //   const listMessagesRequest = {
-  //     action_tag: "LIST_MESSAGES",
-  //     target_id: channelID,
-  //     sender_id: clientID,
-  //     content: {
-  //       id: "",
-  //       membership_id: "",
-  //       text: "",
-  //       created_at: "2024-06-11T15:48:00Z",
-  //       updated_at: null,
-  //     },
-  //   };
+  // メッセージの更新をテスト
+  test("TEST: Update Message", (done) => {
+    const testMessage = {
+      id: msgID,
+      user_id: "",
+      workspace_id: workspaceID,
+      text: "更新したいメッセージの内容",
+      created_at: "2024-06-11T15:48:00Z",
+      action: "UPDATE_MESSAGE",
+      target_id: channelID,
+      // sender_id: clientID,
+      membership_id: membershipIDofMsg,
+    };
 
-  //   ws.once("message", (data) => {
-  //     const receivedMessage = JSON.parse(data.toString());
-  //     if (receivedMessage.action_tag === "LIST_MESSAGES") {
-  //       expect(receivedMessage.action_tag).toBe(listMessagesRequest.action_tag);
-  //       expect(receivedMessage.target_id).toBe(channelID);
-  //       //expect(receivedMessage.sender_id).toBe(clientID);
-  //       expect(Array.isArray(receivedMessage.contents)).toBe(true);
-  //       expect(receivedMessage.contents.length).toBeGreaterThan(0);
-  //       expect(receivedMessage.contents[0]).toHaveProperty("id");
-  //       expect(receivedMessage.contents[0]).toHaveProperty("membership_id");
-  //       expect(receivedMessage.contents[0]).toHaveProperty("text");
-  //       expect(receivedMessage.contents[0].text).toBe(
-  //         "送信したいメッセージの内容"
-  //       );
-  //       expect(receivedMessage.contents[0]).toHaveProperty("created_at");
-  //       console.log("SUCCESS: LIST_MESSAGES");
-  //       done();
-  //     }
-  //   });
+    ws.once("message", (data) => {
+      const receivedMessage = JSON.parse(data.toString());
+      if (receivedMessage.action === "UPDATE_MESSAGE") {
+        expect(receivedMessage.action).toBe(testMessage.action);
+        expect(receivedMessage.target_id).toBe(testMessage.target_id);
+        //expect(receivedMessage.sender_id).toBe(testMessage.sender_id);
+        expect(receivedMessage.id).toBe(testMessage.id);
+        expect(receivedMessage.membership_id).toBe(
+          testMessage.membership_id
+        );
+        expect(receivedMessage.text).toBe(testMessage.text);
+        expect(receivedMessage.created_at).toBe(
+          testMessage.created_at
+        );
+        console.log("SUCCESS: UPDATE_MESSAGE");
+        done();
+      }
+    });
 
-  //   if (ws.readyState === WebSocket.OPEN) {
-  //     ws.send(JSON.stringify(listMessagesRequest));
-  //   } else {
-  //     ws.once("open", () => {
-  //       ws.send(JSON.stringify(listMessagesRequest));
-  //     });
-  //   }
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(testMessage));
+    } else {
+      ws.once("open", () => {
+        ws.send(JSON.stringify(testMessage));
+      });
+    }
 
-  //   ws.once("error", (error) => {
-  //     console.error("FAIL: LIST_MESSAGES", error);
-  //     done(error);
-  //   });
-  // });
+    ws.once("error", (error) => {
+      console.error("FAIL: UPDATE_MESSAGE", error);
+      done(error);
+    });
+  });
 
-  // // メッセージの更新をテスト
-  // test("TEST: Update Message", (done) => {
-  //   const testMessage = {
-  //     action_tag: "UPDATE_MESSAGE",
-  //     target_id: channelID,
-  //     sender_id: clientID,
-  //     content: {
-  //       id: msgID,
-  //       membership_id: membershipIDofMsg,
-  //       text: "更新したいメッセージの内容",
-  //       created_at: "2024-06-11T15:48:00Z",
-  //       updated_at: "2024-07-12T15:48:00Z",
-  //     },
-  //   };
+  // メッセージの削除をテスト
+  test("TEST: Delete Message", (done) => {
+    const testMessage = {
+      id: msgID,
+      user_id: "",
+      workspace_id: workspaceID,
+      text: "",
+      created_at: "2024-06-11T15:48:00Z",
+      action: "DELETE_MESSAGE",
+      target_id: channelID,
+      // sender_id: clientID,
+      membership_id: membershipIDofMsg,
+    };
 
-  //   ws.once("message", (data) => {
-  //     const receivedMessage = JSON.parse(data.toString());
-  //     if (receivedMessage.action_tag === "UPDATE_MESSAGE") {
-  //       expect(receivedMessage.action_tag).toBe(testMessage.action_tag);
-  //       expect(receivedMessage.target_id).toBe(testMessage.target_id);
-  //       //expect(receivedMessage.sender_id).toBe(testMessage.sender_id);
-  //       expect(receivedMessage.content.id).toBe(testMessage.content.id);
-  //       expect(receivedMessage.content.membership_id).toBe(
-  //         testMessage.content.membership_id
-  //       );
-  //       expect(receivedMessage.content.text).toBe(testMessage.content.text);
-  //       expect(receivedMessage.content.created_at).toBe(
-  //         testMessage.content.created_at
-  //       );
-  //       expect(receivedMessage.content.updated_at).toBe(
-  //         testMessage.content.updated_at
-  //       );
-  //       console.log("SUCCESS: UPDATE_MESSAGE");
-  //       done();
-  //     }
-  //   });
+    ws.once("message", (data) => {
+      const receivedMessage = JSON.parse(data.toString());
+      if (receivedMessage.action === "DELETE_MESSAGE") {
+        expect(receivedMessage.action).toBe(testMessage.action);
+        expect(receivedMessage.target_id).toBe(testMessage.target_id);
+        //expect(receivedMessage.sender_id).toBe(testMessage.sender_id);
+        expect(receivedMessage.membership_id).toBe(
+          testMessage.membership_id
+        );
+        expect(receivedMessage.text).toBe(testMessage.text);
+        expect(receivedMessage.created_at).toBe(
+          testMessage.created_at
+        );
+        console.log("SUCCESS: DELETE_MESSAGE");
+        done();
+      }
+    });
 
-  //   if (ws.readyState === WebSocket.OPEN) {
-  //     ws.send(JSON.stringify(testMessage));
-  //   } else {
-  //     ws.once("open", () => {
-  //       ws.send(JSON.stringify(testMessage));
-  //     });
-  //   }
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(testMessage));
+    } else {
+      ws.once("open", () => {
+        ws.send(JSON.stringify(testMessage));
+      });
+    }
 
-  //   ws.once("error", (error) => {
-  //     console.error("FAIL: UPDATE_MESSAGE", error);
-  //     done(error);
-  //   });
-  // });
-
-  // // メッセージの削除をテスト
-  // test("TEST: Delete Message", (done) => {
-  //   const testMessage = {
-  //     action_tag: "DELETE_MESSAGE",
-  //     target_id: channelID,
-  //     sender_id: clientID,
-  //     content: {
-  //       id: msgID,
-  //       membership_id: membershipIDofMsg,
-  //       text: "",
-  //       created_at: "2024-06-11T15:48:00Z",
-  //       updated_at: null,
-  //     },
-  //   };
-
-  //   ws.once("message", (data) => {
-  //     const receivedMessage = JSON.parse(data.toString());
-  //     if (receivedMessage.action_tag === "DELETE_MESSAGE") {
-  //       expect(receivedMessage.action_tag).toBe(testMessage.action_tag);
-  //       expect(receivedMessage.target_id).toBe(testMessage.target_id);
-  //       //expect(receivedMessage.sender_id).toBe(testMessage.sender_id);
-  //       expect(receivedMessage.content.membership_id).toBe(
-  //         testMessage.content.membership_id
-  //       );
-  //       expect(receivedMessage.content.text).toBe(testMessage.content.text);
-  //       expect(receivedMessage.content.created_at).toBe(
-  //         testMessage.content.created_at
-  //       );
-  //       console.log("SUCCESS: DELETE_MESSAGE");
-  //       done();
-  //     }
-  //   });
-
-  //   if (ws.readyState === WebSocket.OPEN) {
-  //     ws.send(JSON.stringify(testMessage));
-  //   } else {
-  //     ws.once("open", () => {
-  //       ws.send(JSON.stringify(testMessage));
-  //     });
-  //   }
-
-  //   ws.once("error", (error) => {
-  //     console.error("FAIL: DELETE_MESSAGE", error);
-  //     done(error);
-  //   });
-  // });
+    ws.once("error", (error) => {
+      console.error("FAIL: DELETE_MESSAGE", error);
+      done(error);
+    });
+  });
 });

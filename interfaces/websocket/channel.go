@@ -22,11 +22,12 @@ type channelManager struct {
 
 func NewChannelManager(channel *entity.Channel, psr repository.PubSubRepository) *channelManager { //nolint:revive // This function is used in other packages
 	return &channelManager{
-		channel:    channel,
-		register:   make(chan *entity.Client),
-		unregister: make(chan *entity.Client),
-		broadcast:  make(chan *entity.Message),
-		psr:        psr,
+		channel:        channel,
+		clientManagers: make(map[*clientManager]bool),
+		register:       make(chan *entity.Client),
+		unregister:     make(chan *entity.Client),
+		broadcast:      make(chan *entity.Message),
+		psr:            psr,
 	}
 }
 
@@ -60,6 +61,7 @@ func (cm *channelManager) publishChannelMessage(ctx context.Context, message *en
 	if err := cm.psr.Publish(ctx, cm.channel.ID, msg); err != nil {
 		log.Error("Failed to publish message", log.Ferror(err))
 	}
+	log.Info("Successfully published message", log.Fstring("channelID", cm.channel.ID))
 }
 
 func (cm *channelManager) subscribeToChannelMessages(ctx context.Context) {

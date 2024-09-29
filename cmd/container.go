@@ -132,7 +132,7 @@ func generateHubManager(ctx context.Context, psr repository.PubSubRepository) *w
 	}
 
 	go cm.Run(ctx)
-	// hm.RegisterChannelManager(cm)
+	hm.RegisterChannelManager(cm)
 
 	log.Info("HubManager created successfully")
 
