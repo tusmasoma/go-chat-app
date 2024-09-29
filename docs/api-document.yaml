@@ -4,7 +4,7 @@ info:
   description: <b>ConnectHub API仕様</b><br>
   version: 1.0.0
 servers:
-  - url: http://localhost:8083/
+  - url: http://localhost:8080/
 tags:
   - name: setting
     description: 設定関連API
@@ -49,6 +49,7 @@ paths:
               description: Auth token for the registered user
               schema:
                 type: string
+      x-codegen-request-body-name: body
   /api/user/signup:
     post:
       tags:
@@ -72,6 +73,7 @@ paths:
               description: Auth token for the registered user
               schema:
                 type: string
+      x-codegen-request-body-name: body
   /api/user/logout:
     post:
       tags:
@@ -85,6 +87,7 @@ paths:
       responses:
         200:
           description: ログアウトが正常に完了しました。
+      x-codegen-request-body-name: body
 components:
   securitySchemes:
     BearerAuth:

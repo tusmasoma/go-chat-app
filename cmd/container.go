@@ -55,13 +55,12 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 		) *chi.Mux {
 			r := chi.NewRouter()
 			r.Use(cors.Handler(cors.Options{
-				AllowedOrigins:     []string{"https://*", "http://*"},
-				AllowedMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-				AllowedHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Origin"},
-				ExposedHeaders:     []string{"Link", "Authorization"},
-				AllowCredentials:   true,
-				MaxAge:             serverConfig.PreflightCacheDurationSec,
-				OptionsPassthrough: true,
+				AllowedOrigins:   []string{"https://*", "http://*"},
+				AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+				AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Origin"},
+				ExposedHeaders:   []string{"Link", "Authorization"},
+				AllowCredentials: false,
+				MaxAge:           serverConfig.PreflightCacheDurationSec,
 			}))
 
 			r.Group(func(r chi.Router) {
@@ -123,8 +122,13 @@ func generateHubManager(ctx context.Context, psr repository.PubSubRepository) *w
 	}
 
 	cm := websocket.NewChannelManager(channel, psr)
+	if cm == nil {
+		log.Critical("Failed to create new channel manager")
+		return nil
+	}
+
 	go cm.Run(ctx)
-	hm.RegisterChannelManager(cm)
+	// hm.RegisterChannelManager(cm)
 
 	log.Info("HubManager created successfully")
 
