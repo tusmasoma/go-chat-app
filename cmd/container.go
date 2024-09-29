@@ -13,6 +13,7 @@ import (
 	"github.com/tusmasoma/go-chat-app/config"
 	"github.com/tusmasoma/go-chat-app/entity"
 	"github.com/tusmasoma/go-chat-app/interfaces/handler"
+	"github.com/tusmasoma/go-chat-app/interfaces/middleware"
 	"github.com/tusmasoma/go-chat-app/interfaces/websocket"
 	"github.com/tusmasoma/go-chat-app/repository"
 	"github.com/tusmasoma/go-chat-app/repository/auth"
@@ -48,10 +49,12 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 		generateHubManager,
 		handler.NewWebsocketHandler,
 		handler.NewUserHandler,
+		middleware.NewAuthMiddleware,
 		func(
 			serverConfig *config.ServerConfig,
 			wsHandler *handler.WebsocketHandler,
 			userHandler handler.UserHandler,
+			authMiddleware middleware.AuthMiddleware,
 		) *chi.Mux {
 			r := chi.NewRouter()
 			r.Use(cors.Handler(cors.Options{
@@ -64,7 +67,8 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 			}))
 
 			r.Group(func(r chi.Router) {
-				r.Get("/ws/{workspace_id}", wsHandler.WebSocket)
+				r.Use(authMiddleware.Authenticate)
+				r.Get("/ws", wsHandler.WebSocket)
 			})
 
 			r.Route("/api", func(r chi.Router) {

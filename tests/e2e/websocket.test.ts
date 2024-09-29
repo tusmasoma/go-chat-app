@@ -17,7 +17,7 @@ describe("WebSocket E2E Tests with Go Server", () => {
       // 認証リクエストを送信してトークンを取得
       const uniqueEmail = `e2e_test_${Date.now()}@test.com`;
       const response = await axios.post(
-        "http://localhost:8080/api/user/create",
+        "http://localhost:8080/api/user/signup",
         {
           email: uniqueEmail,
           password: "e2e_test_password",
@@ -32,40 +32,19 @@ describe("WebSocket E2E Tests with Go Server", () => {
 
       console.log("authToken: ", authToken);
 
-      // // テスト用のworkspaceを作成
-      // const response2 = await axios.post(
-      //   "http://localhost:8083/api/workspace/create",
-      //   {
-      //     name: "TestWorkspace"
-      //   },
-      //   { headers }
-      // );
-      // const workspaceID = response2.data.workspace_id;
+      ws = new WebSocket(`ws://localhost:8080/ws`, { headers });
 
-      // // TODO: Membershipsの作成をする必要がある
-      // const response3 = await axios.post(
-      //   `http://localhost:8083/api/membership/create/${workspaceID}`,
-      //   {
-      //     name: "Test User",
-      //     profile_image_url: "http://example.com/image.jpg",
-      //     is_admin: false
-      //   },
-      //   { headers }
-      // );
+      await new Promise<void>((resolve, reject) => {
+        ws.on("open", () => {
+          console.log("WebSocket connection established");
+          resolve(); // WebSocket接続が確立されたらセットアップ完了
+        });
 
-      // ws = new WebSocket(`ws://localhost:8083/ws/${workspaceID}`, { headers });
-
-      // await new Promise<void>((resolve, reject) => {
-      //   ws.on("open", () => {
-      //     console.log("WebSocket connection established");
-      //     resolve(); // WebSocket接続が確立されたらセットアップ完了
-      //   });
-
-      //   ws.on("error", (error) => {
-      //     console.error("WebSocket connection error:", error);
-      //     reject(error); // 接続エラーが発生した場合はテスト失敗
-      //   });
-      // });
+        ws.on("error", (error) => {
+          console.error("WebSocket connection error:", error);
+          reject(error); // 接続エラーが発生した場合はテスト失敗
+        });
+      });
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Setup failed: ${error.message}`); // 認証リクエストに失敗した場合はテスト失敗
@@ -77,70 +56,30 @@ describe("WebSocket E2E Tests with Go Server", () => {
 
   // 全てのテストの後に実行されるクリーンアップ処理
   afterAll(() => {
-    // ws.close(); // WebSocket接続を閉じる
+    ws.close(); // WebSocket接続を閉じる
   });
 
-  // // WebSocket接続が正しく確立されるかをテスト
-  // test("TEST: WebSocket connection", (done) => {
-  //   // WebSocket接続が確立された時に発生するイベント
-  //   ws.on("open", () => {
-  //     expect(ws.readyState).toBe(WebSocket.OPEN); // WebSocketがOPEN状態であることを確認
-  //     console.log("SUCCESS: WebSocket connection");
-  //     done(); // テスト完了
-  //   });
+  // WebSocket接続が正しく確立されるかをテスト
+  test("TEST: WebSocket connection", (done) => {
+    // WebSocket接続が確立された時に発生するイベント
+    ws.on("open", () => {
+      expect(ws.readyState).toBe(WebSocket.OPEN); // WebSocketがOPEN状態であることを確認
+      console.log("SUCCESS: WebSocket connection");
+      done(); // テスト完了
+    });
 
-  //   // すでにオープンしている場合の処理
-  //   if (ws.readyState === WebSocket.OPEN) {
-  //     console.log("WebSocket was already open");
-  //     expect(ws.readyState).toBe(WebSocket.OPEN);
-  //     done(); // テスト完了
-  //   }
+    // すでにオープンしている場合の処理
+    if (ws.readyState === WebSocket.OPEN) {
+      console.log("WebSocket was already open");
+      expect(ws.readyState).toBe(WebSocket.OPEN);
+      done(); // テスト完了
+    }
 
-  //   ws.on("error", (error) => {
-  //     console.error("FAIL: WebSocket connection", error);
-  //     done(error); // エラー発生時はテスト失敗
-  //   });
-  // });
-
-  // // 公開チャンネルの作成をテスト
-  // test("TEST: Create Public Channel", (done) => {
-  //   const testChannel = `test_${Date.now()}_Channel`;
-  //   const createChannelMessage = {
-  //     action_tag: "CREATE_PUBLIC_CHANNEL",
-  //     target_id: "",
-  //     sender_id: clientID,
-  //     content: {
-  //       id: "",
-  //       membership_id: "",
-  //       text: testChannel,
-  //       created: "2024-06-11T15:48:00Z",
-  //       updated: null,
-  //     },
-  //   };
-
-  //   ws.once("message", (data) => {
-  //     const receivedMessage = JSON.parse(data.toString());
-  //     if (receivedMessage.action_tag === "CREATE_PUBLIC_CHANNEL") {
-  //       expect(receivedMessage.content.text).toBe(testChannel);
-  //       channelID = receivedMessage.target_id;
-  //       console.log("SUCCESS: CREATE_PUBLIC_CHANNEL");
-  //       done();
-  //     }
-  //   });
-
-  //   if (ws.readyState === WebSocket.OPEN) {
-  //     ws.send(JSON.stringify(createChannelMessage));
-  //   } else {
-  //     ws.once("open", () => {
-  //       ws.send(JSON.stringify(createChannelMessage));
-  //     });
-  //   }
-
-  //   ws.once("error", (error) => {
-  //     console.error("FAIL: CREATE_PUBLIC_CHANNEL", error);
-  //     done(error);
-  //   });
-  // });
+    ws.on("error", (error) => {
+      console.error("FAIL: WebSocket connection", error);
+      done(error); // エラー発生時はテスト失敗
+    });
+  });
 
   // // メッセージの送信と受信をテスト
   // test("TEST: Create Message", (done) => {
