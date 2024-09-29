@@ -48,6 +48,24 @@ func (ur *userRepository) Get(ctx context.Context, id string) (*entity.User, err
 	return user, nil
 }
 
+func (ur *userRepository) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
+	executor := ur.db
+	if tx := TxFromCtx(ctx); tx != nil {
+		executor = tx
+	}
+
+	var um userModel
+	if err := executor.WithContext(ctx).First(&um, "email = ?", email).Error; err != nil {
+		return nil, err
+	}
+
+	user, err := entity.NewUser(um.ID, um.Email, um.Password)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func (ur *userRepository) Create(ctx context.Context, user entity.User) error {
 	executor := ur.db
 	if tx := TxFromCtx(ctx); tx != nil {

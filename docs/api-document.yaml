@@ -1,0 +1,111 @@
+openapi: 3.0.2
+info:
+  title: ConnectHub API
+  description: <b>ConnectHub API仕様</b><br>
+  version: 1.0.0
+servers:
+  - url: http://localhost:8083/
+tags:
+  - name: setting
+    description: 設定関連API
+  - name: chat
+    description: チャット関連API
+  - name: user
+    description: ユーザ関連API
+  - name: membership
+    description: メンバーシップ関連API
+paths:
+  /ws/:
+    get:
+      tags:
+        - chat
+      summary: WebSocket通信エンドポイント
+      description: WebSocket接続を確立するためのエンドポイント
+      security:
+        - BearerAuth: []
+      responses:
+        101:
+          description: WebSocketプロトコルを使用して接続が確立されました。
+  /api/user/login:
+    post:
+      tags:
+        - user
+      summary: ユーザログインAPI
+      description: |
+        ユーザをログインします。<br>
+        ユーザの名前とパスワードをリクエストで受け取り、トークンを返します。
+      requestBody:
+        description: Request Body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        200:
+          description: A successful response.
+          headers:
+            Authorization:
+              description: Auth token for the registered user
+              schema:
+                type: string
+  /api/user/signup:
+    post:
+      tags:
+        - user
+      summary: ユーザサインアップAPI
+      description: |
+        新規ユーザを作成します。<br>
+        ユーザの名前とパスワードをリクエストで受け取り、新しいユーザアカウントを作成します。
+      requestBody:
+        description: Request Body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+        required: true
+      responses:
+        200:
+          description: A successful response.
+          headers:
+            Authorization:
+              description: Auth token for the registered user
+              schema:
+                type: string
+  /api/user/logout:
+    post:
+      tags:
+        - user
+      summary: ユーザログアウトAPI
+      description: |
+        ユーザをログアウトします。<br>
+        クライアントからトークンを無効化します。
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: ログアウトが正常に完了しました。
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    SignUpRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: ユーザのメールアドレス
+        password:
+          type: string
+          description: ユーザのパスワード
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          description: ユーザのメールアドレス
+        password:
+          type: string
+          description: ユーザのパスワード

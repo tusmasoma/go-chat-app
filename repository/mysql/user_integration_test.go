@@ -32,6 +32,13 @@ func Test_UserRepository(t *testing.T) {
 		t.Errorf("want: %v, got: %v", user, gotUser)
 	}
 
+	// GetByEmail
+	gotUserByEmail, err := repo.GetByEmail(ctx, "test@gmail.com")
+	ValidateErr(t, err, nil)
+	if !reflect.DeepEqual(user, gotUserByEmail) {
+		t.Errorf("want: %v, got: %v", user, gotUserByEmail)
+	}
+
 	// LockUserByEmail
 	exists, err := repo.LockUserByEmail(ctx, "test@gmail.com")
 	ValidateErr(t, err, nil)

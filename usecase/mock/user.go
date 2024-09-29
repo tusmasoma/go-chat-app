@@ -34,17 +34,32 @@ func (m *MockUserUseCase) EXPECT() *MockUserUseCaseMockRecorder {
 	return m.recorder
 }
 
-// CreateUserAndToken mocks base method.
-func (m *MockUserUseCase) CreateUserAndToken(ctx context.Context, email, passward string) (string, error) {
+// LoginAndGenerateToken mocks base method.
+func (m *MockUserUseCase) LoginAndGenerateToken(ctx context.Context, email, password string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUserAndToken", ctx, email, passward)
+	ret := m.ctrl.Call(m, "LoginAndGenerateToken", ctx, email, password)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateUserAndToken indicates an expected call of CreateUserAndToken.
-func (mr *MockUserUseCaseMockRecorder) CreateUserAndToken(ctx, email, passward interface{}) *gomock.Call {
+// LoginAndGenerateToken indicates an expected call of LoginAndGenerateToken.
+func (mr *MockUserUseCaseMockRecorder) LoginAndGenerateToken(ctx, email, password interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserAndToken", reflect.TypeOf((*MockUserUseCase)(nil).CreateUserAndToken), ctx, email, passward)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginAndGenerateToken", reflect.TypeOf((*MockUserUseCase)(nil).LoginAndGenerateToken), ctx, email, password)
+}
+
+// SignUpAndGenerateToken mocks base method.
+func (m *MockUserUseCase) SignUpAndGenerateToken(ctx context.Context, email, passward string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SignUpAndGenerateToken", ctx, email, passward)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SignUpAndGenerateToken indicates an expected call of SignUpAndGenerateToken.
+func (mr *MockUserUseCaseMockRecorder) SignUpAndGenerateToken(ctx, email, passward interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignUpAndGenerateToken", reflect.TypeOf((*MockUserUseCase)(nil).SignUpAndGenerateToken), ctx, email, passward)
 }

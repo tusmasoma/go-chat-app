@@ -15,7 +15,9 @@ import (
 )
 
 type UserUseCase interface {
-	CreateUserAndToken(ctx context.Context, email string, passward string) (string, error)
+	SignUpAndGenerateToken(ctx context.Context, email string, passward string) (string, error)
+	LoginAndGenerateToken(ctx context.Context, email string, password string) (string, error)
+	// LogoutUser(ctx context.Context, userID string) error
 }
 
 type userUseCase struct {
@@ -41,7 +43,7 @@ func NewUserUseCase(
 
 // 現時点では、User作成時にMembershipも作成する(workspaceIDは固定されています)
 
-func (uuc *userUseCase) CreateUserAndToken(ctx context.Context, email string, password string) (string, error) {
+func (uuc *userUseCase) SignUpAndGenerateToken(ctx context.Context, email string, password string) (string, error) {
 	var user *entity.User
 	if err := uuc.tr.Transaction(ctx, func(ctx context.Context) error {
 		exists, err := uuc.ur.LockUserByEmail(ctx, email)
@@ -95,5 +97,32 @@ func (uuc *userUseCase) CreateUserAndToken(ctx context.Context, email string, pa
 	}
 
 	jwt, _ := uuc.ar.GenerateToken(user.ID, user.Email)
+	return jwt, nil
+}
+
+func (uuc *userUseCase) LoginAndGenerateToken(ctx context.Context, email string, password string) (string, error) {
+	user, err := uuc.ur.GetByEmail(ctx, email)
+	if err != nil {
+		log.Error("Error retrieving user by email", log.Fstring("email", email))
+		return "", err
+	}
+	// 既にログイン済みかどうか確認する
+	// session, _ := uuc.cr.GetUserSession(ctx, user.ID)
+	// if session != "" {
+	// 	log.Info("Already logged in", log.Fstring("userID", user.ID))
+	// 	return "", fmt.Errorf("user id in cache")
+	// }
+
+	// Clientから送られてきたpasswordをハッシュ化したものとMySQLから返されたハッシュ化されたpasswordを比較する
+	if err = user.CompareHashAndPassword(password); err != nil {
+		log.Info("Password does not match", log.Fstring("email", email))
+		return "", err
+	}
+
+	jwt, _ := uuc.ar.GenerateToken(user.ID, user.Email)
+	// if err = uuc.cr.SetUserSession(ctx, user.ID, jti); err != nil {
+	// 	log.Error("Failed to set access token in cache", log.Fstring("userID", user.ID), log.Fstring("jti", jti))
+	// 	return "", err
+	// }
 	return jwt, nil
 }

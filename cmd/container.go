@@ -70,8 +70,8 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 
 			r.Route("/api", func(r chi.Router) {
 				r.Route("/user", func(r chi.Router) {
-					r.Post("/create", userHandler.CreateUser)
-					// r.Post("/login", userHandler.Login)
+					r.Post("/signup", userHandler.SignUp)
+					r.Post("/login", userHandler.Login)
 					// r.Group(func(r chi.Router) {
 					// 	r.Use(authMiddleware.Authenticate)
 					// 	r.Get("/logout", userHandler.Logout)
