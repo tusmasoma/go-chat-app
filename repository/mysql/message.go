@@ -11,11 +11,16 @@ import (
 )
 
 type messageModel struct {
-	ID           string    `gorm:"type:char(36);primaryKey"`
-	MembershipID string    `gorm:"column:membership_id"`
-	ChannelID    string    `gorm:"column:channel_id"`
-	Text         string    `gorm:"column:text"`
-	CreatedAt    time.Time `gorm:"column:created_at"`
+	ID          string    `gorm:"type:char(36);primaryKey"`
+	UserID      string    `gorm:"column:user_id"`
+	WorkspaceID string    `gorm:"column:workspace_id"`
+	ChannelID   string    `gorm:"column:channel_id"`
+	Text        string    `gorm:"column:text"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+}
+
+func (messageModel) TableName() string {
+	return "Messages"
 }
 
 type messageRepository struct {
@@ -44,7 +49,8 @@ func (mr *messageRepository) List(ctx context.Context, channleID string) (*entit
 	for i, mm := range mms {
 		msgs[i], err = entity.NewMessage(
 			mm.ID,
-			mm.MembershipID,
+			mm.UserID,
+			mm.WorkspaceID,
 			mm.Text,
 			entity.NoneAction,
 			mm.ChannelID,
@@ -75,7 +81,8 @@ func (mr *messageRepository) Get(ctx context.Context, id string) (*entity.Messag
 
 	msg, err := entity.NewMessage(
 		mm.ID,
-		mm.MembershipID,
+		mm.UserID,
+		mm.WorkspaceID,
 		mm.Text,
 		entity.GetMessagesAction,
 		mm.ChannelID,
@@ -94,11 +101,12 @@ func (mr *messageRepository) Create(ctx context.Context, message entity.Message)
 	}
 
 	if err := executor.WithContext(ctx).Create(&messageModel{
-		ID:           message.ID,
-		MembershipID: message.UserID,
-		ChannelID:    message.TargetID,
-		Text:         message.Text,
-		CreatedAt:    message.CreatedAt,
+		ID:          message.ID,
+		UserID:      message.UserID,
+		WorkspaceID: message.WorkspaceID,
+		ChannelID:   message.TargetID,
+		Text:        message.Text,
+		CreatedAt:   message.CreatedAt,
 	}).Error; err != nil {
 		return err
 	}

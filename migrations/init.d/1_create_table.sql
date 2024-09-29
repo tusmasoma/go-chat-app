@@ -27,7 +27,6 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE Memberships (
-    id CHAR(73) PRIMARY KEY,
     user_id CHAR(36) NOT NULL,
     workspace_id CHAR(36) NOT NULL,
     name VARCHAR(50) NOT NULL,
@@ -37,16 +36,18 @@ CREATE TABLE Memberships (
 );
 
 CREATE TABLE Membership_Channels (
-    membership_id CHAR(73) NOT NULL,
+    user_id CHAR(36) NOT NULL,
+    workspace_id CHAR(36) NOT NULL,
     channel_id CHAR(36) NOT NULL,
-    PRIMARY KEY (membership_id, channel_id),
-    FOREIGN KEY (membership_id) REFERENCES Memberships(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, workspace_id, channel_id),
+    FOREIGN KEY (user_id, workspace_id) REFERENCES Memberships(user_id, workspace_id) ON DELETE CASCADE,
     FOREIGN KEY (channel_id) REFERENCES Channels(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Messages (
     id CHAR(36) PRIMARY KEY, -- UUIDは36文字の文字列として格納されます
-    membership_id CHAR(73) NOT NULL,
+    user_id CHAR(36) NOT NULL,
+    workspace_id CHAR(36) NOT NULL,
     channel_id CHAR(36) NOT NULL,
     text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

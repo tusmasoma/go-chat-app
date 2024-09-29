@@ -49,12 +49,15 @@ func (wsh *WebsocketHandler) WebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Error("Failed to create new client", log.Ferror(err))
 		return
 	}
-	clientManager := ws.NewClientManager(client, conn, wsh.muc)
+	clientManager := ws.NewClientManager(client, conn, wsh.hm, wsh.muc)
 
 	go clientManager.WritePump()
 	go clientManager.ReadPump()
 
 	wsh.hm.Register <- client
+
+	// HubManagerに登録さているChannelにClientを登録
+	wsh.hm.RegisterClientManagerInChannelManager(clientManager)
 
 	log.Info(
 		"Successfully Client connected",

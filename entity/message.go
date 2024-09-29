@@ -36,22 +36,27 @@ var validActions = map[string]bool{
 }
 
 type Message struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
-	Text      string    `json:"text"`
-	CreatedAt time.Time `json:"created_at"`
-	Action    string    `json:"action"`
-	TargetID  string    `json:"target_id"` // TargetID is the ID of the channel or user the message is intended for
+	ID          string    `json:"id"`
+	UserID      string    `json:"user_id"`
+	WorkspaceID string    `json:"workspace_id"`
+	Text        string    `json:"text"`
+	CreatedAt   time.Time `json:"created_at"`
+	Action      string    `json:"action"`
+	TargetID    string    `json:"target_id"` // TargetID is the ID of the channel or user the message is intended for
 	// SenderID  string    `json:"sender_id"` // SenderID is the ID of the user who sent the message
 }
 
-func NewMessage(id, userID, text, action, targetID string, createdAt time.Time) (*Message, error) {
+func NewMessage(id, userID, workspaceID, text, action, targetID string, createdAt time.Time) (*Message, error) {
 	if id == "" {
 		id = uuid.New().String()
 	}
 	if userID == "" {
 		log.Error("userID is required")
 		return nil, errors.New("userID is required")
+	}
+	if workspaceID == "" {
+		log.Error("workspaceID is required")
+		return nil, errors.New("workspaceID is required")
 	}
 	if text == "" {
 		// TODO: textの長さ制限を設ける
@@ -71,12 +76,13 @@ func NewMessage(id, userID, text, action, targetID string, createdAt time.Time) 
 		createdAt = now
 	}
 	return &Message{
-		ID:        id,
-		UserID:    userID,
-		Text:      text,
-		CreatedAt: createdAt,
-		Action:    action,
-		TargetID:  targetID,
+		ID:          id,
+		UserID:      userID,
+		WorkspaceID: workspaceID,
+		Text:        text,
+		CreatedAt:   createdAt,
+		Action:      action,
+		TargetID:    targetID,
 	}, nil
 }
 

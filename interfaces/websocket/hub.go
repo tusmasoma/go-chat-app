@@ -1,6 +1,8 @@
 package websocket
 
 import (
+	"context"
+
 	"github.com/tusmasoma/go-chat-app/entity"
 )
 
@@ -17,10 +19,12 @@ type HubManager struct {
 
 func NewHubManager(hub *entity.Hub) HubManager {
 	return HubManager{
-		Hub:        hub,
-		Register:   make(chan *entity.Client),
-		unregister: make(chan *entity.Client),
-		broadcast:  make(chan []byte),
+		Hub:             hub,
+		clientManagers:  make(map[*clientManager]bool),
+		channelManagers: make(map[*channelManager]bool),
+		Register:        make(chan *entity.Client),
+		unregister:      make(chan *entity.Client),
+		broadcast:       make(chan []byte),
 	}
 }
 
@@ -61,4 +65,21 @@ func (hm *HubManager) findChannelManagerByChannelID(channelID string) *channelMa
 		}
 	}
 	return nil
+}
+
+func (hm *HubManager) RegisterChannel(ctx context.Context, channel *entity.Channel) {
+	cm := NewChannelManager(channel, nil)
+	go cm.Run(ctx)
+	hm.channelManagers[cm] = true
+}
+
+func (hm *HubManager) RegisterChannelManager(cm *channelManager) { // 一旦DIのためのメソッドを追加
+	hm.channelManagers[cm] = true
+}
+
+// HubManagerに登録されているChannelManagerのClientManagerにClientを登録
+func (hm *HubManager) RegisterClientManagerInChannelManager(client *clientManager) {
+	for cm := range hm.channelManagers {
+		cm.clientManagers[client] = true
+	}
 }

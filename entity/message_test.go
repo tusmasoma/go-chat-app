@@ -15,17 +15,19 @@ func TestEntity_NewMessage(t *testing.T) {
 
 	msgID := uuid.New().String()
 	userID := uuid.New().String()
+	workspaceID := uuid.New().String()
 	channelID := uuid.New().String()
 
 	patterns := []struct {
 		name string
 		arg  struct {
-			id        string
-			userID    string
-			text      string
-			action    string
-			targetID  string
-			createdAt time.Time
+			id          string
+			userID      string
+			workspaceID string
+			text        string
+			action      string
+			targetID    string
+			createdAt   time.Time
 		}
 		want struct {
 			message *Message
@@ -35,30 +37,33 @@ func TestEntity_NewMessage(t *testing.T) {
 		{
 			name: "Success: id is not empty",
 			arg: struct {
-				id        string
-				userID    string
-				text      string
-				action    string
-				targetID  string
-				createdAt time.Time
+				id          string
+				userID      string
+				workspaceID string
+				text        string
+				action      string
+				targetID    string
+				createdAt   time.Time
 			}{
-				id:        msgID,
-				userID:    userID,
-				text:      "text",
-				action:    CreateMessageAction,
-				targetID:  channelID,
-				createdAt: time.Time{},
+				id:          msgID,
+				userID:      userID,
+				workspaceID: workspaceID,
+				text:        "text",
+				action:      CreateMessageAction,
+				targetID:    channelID,
+				createdAt:   time.Time{},
 			},
 			want: struct {
 				message *Message
 				err     error
 			}{
 				message: &Message{
-					ID:       msgID,
-					UserID:   userID,
-					Text:     "text",
-					Action:   CreateMessageAction,
-					TargetID: channelID,
+					ID:          msgID,
+					UserID:      userID,
+					WorkspaceID: workspaceID,
+					Text:        "text",
+					Action:      CreateMessageAction,
+					TargetID:    channelID,
 				},
 				err: nil,
 			},
@@ -66,29 +71,32 @@ func TestEntity_NewMessage(t *testing.T) {
 		{
 			name: "Success: id is empty",
 			arg: struct {
-				id        string
-				userID    string
-				text      string
-				action    string
-				targetID  string
-				createdAt time.Time
+				id          string
+				userID      string
+				workspaceID string
+				text        string
+				action      string
+				targetID    string
+				createdAt   time.Time
 			}{
-				id:        "",
-				userID:    userID,
-				text:      "text",
-				action:    CreateMessageAction,
-				targetID:  channelID,
-				createdAt: time.Time{},
+				id:          "",
+				userID:      userID,
+				workspaceID: workspaceID,
+				text:        "text",
+				action:      CreateMessageAction,
+				targetID:    channelID,
+				createdAt:   time.Time{},
 			},
 			want: struct {
 				message *Message
 				err     error
 			}{
 				message: &Message{
-					UserID:   userID,
-					Text:     "text",
-					Action:   CreateMessageAction,
-					TargetID: channelID,
+					UserID:      userID,
+					WorkspaceID: workspaceID,
+					Text:        "text",
+					Action:      CreateMessageAction,
+					TargetID:    channelID,
 				},
 				err: nil,
 			},
@@ -96,19 +104,21 @@ func TestEntity_NewMessage(t *testing.T) {
 		{
 			name: "Fail: userID is empty",
 			arg: struct {
-				id        string
-				userID    string
-				text      string
-				action    string
-				targetID  string
-				createdAt time.Time
+				id          string
+				userID      string
+				workspaceID string
+				text        string
+				action      string
+				targetID    string
+				createdAt   time.Time
 			}{
-				id:        "",
-				userID:    "",
-				text:      "text",
-				action:    CreateMessageAction,
-				targetID:  channelID,
-				createdAt: time.Time{},
+				id:          "",
+				userID:      "",
+				workspaceID: workspaceID,
+				text:        "text",
+				action:      CreateMessageAction,
+				targetID:    channelID,
+				createdAt:   time.Time{},
 			},
 			want: struct {
 				message *Message
@@ -119,21 +129,50 @@ func TestEntity_NewMessage(t *testing.T) {
 			},
 		},
 		{
+			name: "Fail: workspaceID is empty",
+			arg: struct {
+				id          string
+				userID      string
+				workspaceID string
+				text        string
+				action      string
+				targetID    string
+				createdAt   time.Time
+			}{
+				id:          "",
+				userID:      userID,
+				workspaceID: "",
+				text:        "text",
+				action:      CreateMessageAction,
+				targetID:    channelID,
+				createdAt:   time.Time{},
+			},
+			want: struct {
+				message *Message
+				err     error
+			}{
+				message: nil,
+				err:     errors.New("workspaceID is required"),
+			},
+		},
+		{
 			name: "Fail: text is empty",
 			arg: struct {
-				id        string
-				userID    string
-				text      string
-				action    string
-				targetID  string
-				createdAt time.Time
+				id          string
+				userID      string
+				workspaceID string
+				text        string
+				action      string
+				targetID    string
+				createdAt   time.Time
 			}{
-				id:        msgID,
-				userID:    userID,
-				text:      "",
-				action:    CreateMessageAction,
-				targetID:  channelID,
-				createdAt: time.Time{},
+				id:          msgID,
+				userID:      userID,
+				workspaceID: workspaceID,
+				text:        "",
+				action:      CreateMessageAction,
+				targetID:    channelID,
+				createdAt:   time.Time{},
 			},
 			want: struct {
 				message *Message
@@ -146,19 +185,21 @@ func TestEntity_NewMessage(t *testing.T) {
 		{
 			name: "Fail: action is invalid",
 			arg: struct {
-				id        string
-				userID    string
-				text      string
-				action    string
-				targetID  string
-				createdAt time.Time
+				id          string
+				userID      string
+				workspaceID string
+				text        string
+				action      string
+				targetID    string
+				createdAt   time.Time
 			}{
-				id:        msgID,
-				userID:    userID,
-				text:      "text",
-				action:    "InvalidAction",
-				targetID:  channelID,
-				createdAt: time.Time{},
+				id:          msgID,
+				userID:      userID,
+				workspaceID: workspaceID,
+				text:        "text",
+				action:      "InvalidAction",
+				targetID:    channelID,
+				createdAt:   time.Time{},
 			},
 			want: struct {
 				message *Message
@@ -171,19 +212,21 @@ func TestEntity_NewMessage(t *testing.T) {
 		{
 			name: "Fail: targetID is empty",
 			arg: struct {
-				id        string
-				userID    string
-				text      string
-				action    string
-				targetID  string
-				createdAt time.Time
+				id          string
+				userID      string
+				workspaceID string
+				text        string
+				action      string
+				targetID    string
+				createdAt   time.Time
 			}{
-				id:        msgID,
-				userID:    userID,
-				text:      "text",
-				action:    CreateMessageAction,
-				targetID:  "",
-				createdAt: time.Time{},
+				id:          msgID,
+				userID:      userID,
+				workspaceID: workspaceID,
+				text:        "text",
+				action:      CreateMessageAction,
+				targetID:    "",
+				createdAt:   time.Time{},
 			},
 			want: struct {
 				message *Message
@@ -200,7 +243,7 @@ func TestEntity_NewMessage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			message, err := NewMessage(tt.arg.id, tt.arg.userID, tt.arg.text, tt.arg.action, tt.arg.targetID, tt.arg.createdAt)
+			message, err := NewMessage(tt.arg.id, tt.arg.userID, tt.arg.workspaceID, tt.arg.text, tt.arg.action, tt.arg.targetID, tt.arg.createdAt)
 
 			if (err != nil) != (tt.want.err != nil) {
 				t.Errorf("NewMessage() error = %v, wantErr %v", err, tt.want.err)
@@ -220,11 +263,13 @@ func TestEntity_Message_Encode(t *testing.T) {
 
 	msgID := uuid.New().String()
 	userID := uuid.New().String()
+	workspaceID := uuid.New().String()
 	channelID := uuid.New().String()
 
 	message, _ := NewMessage(
 		msgID,
 		userID,
+		workspaceID,
 		"text",
 		CreateMessageAction,
 		channelID,
@@ -246,11 +291,13 @@ func TestEntity_NewMessages(t *testing.T) {
 
 	msgID := uuid.New().String()
 	userID := uuid.New().String()
+	workspaceID := uuid.New().String()
 	channelID := uuid.New().String()
 
 	message, _ := NewMessage(
 		msgID,
 		userID,
+		workspaceID,
 		"text",
 		CreateMessageAction,
 		channelID,
@@ -376,11 +423,13 @@ func TestEntity_Messages_Encode(t *testing.T) {
 
 	msgID := uuid.New().String()
 	userID := uuid.New().String()
+	workspaceID := uuid.New().String()
 	channelID := uuid.New().String()
 
 	message, _ := NewMessage(
 		msgID,
 		userID,
+		workspaceID,
 		"text",
 		CreateMessageAction,
 		channelID,

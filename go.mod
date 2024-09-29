@@ -3,6 +3,7 @@ module github.com/tusmasoma/go-chat-app
 go 1.21.3
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/cors v1.2.1
 	github.com/go-redis/redis/v8 v8.11.5
@@ -16,6 +17,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tusmasoma/go-tech-dojo v0.0.0-20240805120803-02e31d5c8a21
 	go.uber.org/dig v1.18.0
+	golang.org/x/crypto v0.25.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12
 )

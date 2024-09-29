@@ -15,10 +15,10 @@ import (
 
 var newline = []byte{'\n'}
 
-type ClientManager interface {
-	ReadPump()
-	WritePump()
-}
+// type ClientManager interface {
+// 	ReadPump()
+// 	WritePump()
+// }
 
 type clientManager struct {
 	client *entity.Client
@@ -28,10 +28,11 @@ type clientManager struct {
 	muc    usecase.MessageUseCase
 }
 
-func NewClientManager(client *entity.Client, conn *websocket.Conn, muc usecase.MessageUseCase) ClientManager {
+func NewClientManager(client *entity.Client, conn *websocket.Conn, hm *HubManager, muc usecase.MessageUseCase) *clientManager { //nolint:revive // This function is used in other packages
 	return &clientManager{
 		client: client,
 		conn:   conn,
+		hm:     hm,
 		send:   make(chan []byte, config.BufferSize),
 		muc:    muc,
 	}
