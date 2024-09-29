@@ -70,3 +70,7 @@ func (hm *HubManager) RegisterChannel(ctx context.Context, channel *entity.Chann
 	go cm.Run(ctx)
 	hm.channelManagers[cm] = true
 }
+
+func (hm *HubManager) RegisterChannelManager(cm *channelManager) { // 一旦DIのためのメソッドを追加
+	hm.channelManagers[cm] = true
+}

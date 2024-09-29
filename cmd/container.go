@@ -14,7 +14,9 @@ import (
 	"github.com/tusmasoma/go-chat-app/entity"
 	"github.com/tusmasoma/go-chat-app/interfaces/handler"
 	"github.com/tusmasoma/go-chat-app/interfaces/websocket"
+	"github.com/tusmasoma/go-chat-app/repository"
 	"github.com/tusmasoma/go-chat-app/repository/mysql"
+	"github.com/tusmasoma/go-chat-app/repository/redis"
 	"github.com/tusmasoma/go-chat-app/usecase"
 )
 
@@ -35,6 +37,8 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 		mysql.NewMySQLDB,
 		mysql.NewTransactionRepository,
 		mysql.NewMessageRepository,
+		redis.NewRedisClient,
+		redis.NewPubSubRepository,
 		usecase.NewMessageUseCase,
 		generateHubManager,
 		handler.NewWebsocketHandler,
@@ -72,8 +76,9 @@ func BuildContainer(ctx context.Context) (*dig.Container, error) {
 	return container, nil
 }
 
-func generateHubManager() *websocket.HubManager {
+func generateHubManager(ctx context.Context, psr repository.PubSubRepository) *websocket.HubManager {
 	//  現状、Workspaceは一つの為、containerにてHubManagerを生成して、DIする
+	//  同様に、ChannelManagerも生成してDIする
 	workspaceID := os.Getenv("WORKSPACE_ID")
 	if workspaceID == "" {
 		log.Critical("Failed to get workspace ID")
@@ -87,6 +92,21 @@ func generateHubManager() *websocket.HubManager {
 	hm := websocket.NewHubManager(hub)
 
 	go hm.Run()
+
+	channelID := os.Getenv("CHANNEL_ID")
+	if channelID == "" {
+		log.Critical("Failed to get channel ID")
+		return nil
+	}
+	channel, err := entity.NewChannel(channelID, "DefaultChannel", false)
+	if err != nil {
+		log.Critical("Failed to create new channel", log.Ferror(err))
+		return nil
+	}
+
+	cm := websocket.NewChannelManager(channel, psr)
+	go cm.Run(ctx)
+	hm.RegisterChannelManager(cm)
 
 	log.Info("HubManager created successfully")
 
