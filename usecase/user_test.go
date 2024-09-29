@@ -39,7 +39,7 @@ func TestUserUseCase_SignUpAndGenerateToken(t *testing.T) { //nolint:gocognit //
 				m2.EXPECT().Transaction(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fn func(ctx context.Context) error) error {
 					return fn(ctx)
 				})
-				m.EXPECT().LockUserByEmail(
+				m.EXPECT().LockByEmail(
 					gomock.Any(),
 					"test@gmail.com",
 				).Return(false, nil)
@@ -90,7 +90,7 @@ func TestUserUseCase_SignUpAndGenerateToken(t *testing.T) { //nolint:gocognit //
 				m2.EXPECT().Transaction(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, fn func(ctx context.Context) error) error {
 					return fn(ctx)
 				})
-				m.EXPECT().LockUserByEmail(
+				m.EXPECT().LockByEmail(
 					gomock.Any(),
 					"test@gmail.com",
 				).Return(true, nil)

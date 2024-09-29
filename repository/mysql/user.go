@@ -108,7 +108,7 @@ func (ur *userRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (ur *userRepository) LockUserByEmail(ctx context.Context, email string) (bool, error) {
+func (ur *userRepository) LockByEmail(ctx context.Context, email string) (bool, error) {
 	executor := ur.db
 	if tx := TxFromCtx(ctx); tx != nil {
 		executor = tx

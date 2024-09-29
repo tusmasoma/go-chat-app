@@ -46,7 +46,7 @@ func NewUserUseCase(
 func (uuc *userUseCase) SignUpAndGenerateToken(ctx context.Context, email string, password string) (string, error) {
 	var user *entity.User
 	if err := uuc.tr.Transaction(ctx, func(ctx context.Context) error {
-		exists, err := uuc.ur.LockUserByEmail(ctx, email)
+		exists, err := uuc.ur.LockByEmail(ctx, email)
 		if err != nil {
 			log.Error("Error retrieving user by email", log.Fstring("email", email))
 			return err

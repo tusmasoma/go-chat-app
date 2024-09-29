@@ -40,7 +40,7 @@ func Test_UserRepository(t *testing.T) {
 	}
 
 	// LockUserByEmail
-	exists, err := repo.LockUserByEmail(ctx, "test@gmail.com")
+	exists, err := repo.LockByEmail(ctx, "test@gmail.com")
 	ValidateErr(t, err, nil)
 	if !exists {
 		t.Fatalf("Failed to get user by email")

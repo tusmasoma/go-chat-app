@@ -94,19 +94,19 @@ func (mr *MockUserRepositoryMockRecorder) GetByEmail(ctx, email interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByEmail", reflect.TypeOf((*MockUserRepository)(nil).GetByEmail), ctx, email)
 }
 
-// LockUserByEmail mocks base method.
-func (m *MockUserRepository) LockUserByEmail(ctx context.Context, email string) (bool, error) {
+// LockByEmail mocks base method.
+func (m *MockUserRepository) LockByEmail(ctx context.Context, email string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LockUserByEmail", ctx, email)
+	ret := m.ctrl.Call(m, "LockByEmail", ctx, email)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// LockUserByEmail indicates an expected call of LockUserByEmail.
-func (mr *MockUserRepositoryMockRecorder) LockUserByEmail(ctx, email interface{}) *gomock.Call {
+// LockByEmail indicates an expected call of LockByEmail.
+func (mr *MockUserRepositoryMockRecorder) LockByEmail(ctx, email interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LockUserByEmail", reflect.TypeOf((*MockUserRepository)(nil).LockUserByEmail), ctx, email)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LockByEmail", reflect.TypeOf((*MockUserRepository)(nil).LockByEmail), ctx, email)
 }
 
 // Update mocks base method.
