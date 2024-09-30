@@ -15,6 +15,9 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  config.BufferSize,
 	WriteBufferSize: config.BufferSize,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 type WebsocketHandler struct {
