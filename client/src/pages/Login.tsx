@@ -4,19 +4,19 @@ import { Navigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
   // useState フックで状態を定義
-  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [isInvalid, setIsInvalid] = useState<boolean>(false);
   const [redirect, setRedirect] = useState<boolean>(false);
-  const [redirectTo, setRedirectTo] = useState<string>('/chat?u=');
+  const [redirectTo, setRedirectTo] = useState<string>('/chat');
   const endpoint = 'http://localhost:8080/api/user/login';
 
   // 入力変更時に状態を更新
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    if (name === 'username') {
-      setUsername(value);
+    if (name === 'email') {
+      setEmail(value);
     } else if (name === 'password') {
       setPassword(value);
     }
@@ -28,13 +28,15 @@ const Login: React.FC = () => {
 
     try {
       const res = await axios.post(endpoint, {
-        username,
+        email,
         password,
       });
 
       console.log('login', res);
-      if (res.data.status) {
-        setRedirectTo(redirectTo + username);
+      if (res.status === 200) {
+        localStorage.setItem('jwtToken', res.headers.authorization);
+
+        setRedirectTo(redirectTo);
         setRedirect(true);
       } else {
         setMessage(res.data.message);
@@ -74,13 +76,13 @@ const Login: React.FC = () => {
               fontWeight: 'bold',
             }}
           >
-            Username
+            Email
           </label>
           <input
             type="text"
-            placeholder="Username"
-            name="username"
-            value={username}
+            placeholder="Email"
+            name="email"
+            value={email}
             onChange={onChange}
             style={{
               width: '100%',
@@ -117,7 +119,7 @@ const Login: React.FC = () => {
           {!isInvalid ? (
             ''
           ) : (
-            <span style={{ color: 'red' }}>Invalid username or password</span>
+            <span style={{ color: 'red' }}>Invalid email or password</span>
           )}
         </div>
 
