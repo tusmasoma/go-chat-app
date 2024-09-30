@@ -34,7 +34,8 @@ const Login: React.FC = () => {
 
       console.log('login', res);
       if (res.status === 200) {
-        localStorage.setItem('jwtToken', res.headers.authorization);
+        const token = res.headers.authorization.split(' ')[1];
+        localStorage.setItem('jwtToken', token);
 
         setRedirectTo(redirectTo);
         setRedirect(true);

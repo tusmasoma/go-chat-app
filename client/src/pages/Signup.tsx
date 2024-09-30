@@ -34,7 +34,8 @@ const SignUp: React.FC = () => {
 
       if (res.status === 200) {
         console.log('Success: signup', res);
-        localStorage.setItem('jwtToken', res.headers.authorization);
+        const token = res.headers.authorization.split(' ')[1];
+        localStorage.setItem('jwtToken', token);
 
         setRedirectTo(redirectTo);
         setRedirect(true);

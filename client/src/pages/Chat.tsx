@@ -2,78 +2,105 @@ import React, { useState, useEffect, useRef } from 'react';
 import InputForm from '../components/chat/inputForm';
 import Messages,{ CustomMessage } from '../components/chat/messages';
 
+let workspaceID: string = "550e8400-e29b-41d4-a716-446655440000";
+let channelID: string = "123e4567-e89b-12d3-a456-426614174000";
+
 const Chat = () => {
-    const [messages, setMessages] = useState<CustomMessage[]>([]); // メッセージのリスト
-    const [input, setInput] = useState(''); // 入力内容
-    const [isLoading, setIsLoading] = useState(false); // ローディング状態
-    const [bottomPadding, setBottomPadding] = useState(0); // メッセージの高さに基づいた余白
-    const lastMessageRef = useRef<HTMLDivElement>(null);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<CustomMessage[]>([]); // メッセージのリスト
+  const [input, setInput] = useState(''); // 入力内容
+  const [isLoading, setIsLoading] = useState(false); // ローディング状態
+  const [bottomPadding, setBottomPadding] = useState(0); // メッセージの高さに基づいた余白
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const ws = useRef<WebSocket | null>(null); // WebSocketインスタンス
 
-    // 入力内容が変わったときのハンドラー
-    const handleInputChange = (
-        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      ) => {
-        setInput(event.target.value);
+  // WebSocketの接続
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      console.error('JWT token not found');
+      return;
+    }
+
+    // WebSocket URLにJWTトークンをクエリパラメータとして付与 (例: ws://localhost:8080/ws?token=xxxxx)
+    // ブラウザ環境のWebSocketでは、headers: { Authorization: `Bearer ${token}` } が使えないため、クエリパラメータでトークンを渡す
+    ws.current = new WebSocket(`ws://localhost:8080/ws?token=${token}`);
+
+    ws.current.onopen = () => {
+      console.log("WebSocket connection established");
     };
 
-    // フォーム送信時のハンドラー
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (!input.trim()) return;
-
-      const newMessage: CustomMessage = {
-        id: String(messages.length + 1), // IDを生成
-        content: input, // inputをcontentに代入
-        role: "user", // ロールを設定
-        timestamp: new Date().toISOString(), // タイムスタンプを生成
-      };
-
-      // ローディング状態にセット
-      setIsLoading(true);
-
-      // 仮のメッセージ送信ロジック
-      setTimeout(() => {
-        setMessages((prevMessages) => [...prevMessages, newMessage]); // ユーザーメッセージを追加
-        setInput(''); // 入力をクリア
-        setIsLoading(false); // ローディング終了
-
-        // 固定メッセージを1秒後に返却
-        const fixedMessage: CustomMessage = {
-          id: String(messages.length + 2), // 固定メッセージ用のIDを生成
-          content: "これは固定メッセージです。", // 固定の返答メッセージ
-          role: "bot", // ボットからのメッセージとして設定
-          timestamp: new Date().toISOString(),
-        };
-
-        setTimeout(() => {
-          setMessages((prevMessages) => [...prevMessages, fixedMessage]);
-        }, 1000); // 1秒後に固定メッセージを返す
-      }, 1000); // 1秒後にメッセージを送信するように見せる
+    ws.current.onmessage = (event) => {
+      const message: CustomMessage = JSON.parse(event.data);
+      setMessages((prevMessages) => [...prevMessages, message]); // 受信したメッセージを追加
     };
 
-    // メッセージの送信を止める（仮のロジック）
-    const stop = () => {
-      setIsLoading(false);
+    ws.current.onerror = (error) => {
+      console.error("WebSocket error:", error);
     };
 
-    useEffect(() => {
-      if (lastMessageRef.current) {
-        // 最新メッセージの高さに基づいて余白を設定
-        messagesEndRef.current!.style.paddingBottom = `100px`;
-      }
-    }, [messages]);
-
-    // 最新メッセージにスクロール
-    const scrollToBottom = () => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
+    ws.current.onclose = () => {
+      console.log("WebSocket connection closed");
     };
 
-    useEffect(() => {
-      scrollToBottom();
-    }, [messages]);
+    return () => {
+      ws.current?.close(); // コンポーネントがアンマウントされたらWebSocketを閉じる
+    };
+  }, []);
+
+  // 入力内容が変わったときのハンドラー
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setInput(event.target.value);
+  };
+
+  // フォーム送信時のハンドラー
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!input.trim()) return;
+
+    const newMessage: CustomMessage = {
+      id: String(messages.length + 1),
+      user_id: "",
+      workspace_id: workspaceID,
+      target_id: channelID,
+      text: input,
+      role: "user",
+      timestamp: new Date().toISOString(),
+      action: "CREATE_MESSAGE",
+    };
+
+    // メッセージを追加し、入力内容をクリア
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    // WebSocketでメッセージを送信
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify(newMessage));
+    }
+
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    if (lastMessageRef.current) {
+      // 最新メッセージの高さに基づいて余白を設定
+      messagesEndRef.current!.style.paddingBottom = `100px`;
+    }
+  }, [messages]);
+
+  // 最新メッセージにスクロール
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
     <main className="flex flex-col items-center min-h-screen p-12 text-lg">

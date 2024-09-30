@@ -4,10 +4,16 @@ import { Bot, User2 } from "lucide-react";
 
 export type CustomMessage = {
   id: string;
-  content: string;
+  user_id: string;
+  workspace_id: string;
+  target_id: string;
+  membership_id?: string;
+  text: string;
   role: "user" | "bot" | "assistant" | "system" | "function" | "tool";
-  timestamp?: string;  // 任意でタイムスタンプなどのフィールドを追加
+  timestamp?: string;
+  action?: string;
 };
+
 
 type Props = {
   messages: CustomMessage[];
@@ -30,7 +36,7 @@ const Messages = ({ messages, isLoading }: Props) => {
                 : "bg-gray-300 text-black ml-5"
             }`}
           >
-            <Markdown text={m.content} />
+            <Markdown text={m.text} />
             {m.role === "user" ? (
               <User2 className="absolute -right-10 top-2 border rounded-full p-1 shadow-lg bg-purple-600 text-white" />
             ) : (
