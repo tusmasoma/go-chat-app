@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import InputForm from '../components/chat/inputForm';
 import Messages,{ CustomMessage } from '../components/chat/messages';
 
-const Home = () => {
+const Chat = () => {
     const [messages, setMessages] = useState<CustomMessage[]>([]); // メッセージのリスト
     const [input, setInput] = useState(''); // 入力内容
     const [isLoading, setIsLoading] = useState(false); // ローディング状態
@@ -98,4 +98,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Chat;
