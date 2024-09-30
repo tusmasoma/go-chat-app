@@ -43,9 +43,9 @@ const Chat = () => {
       console.log("WebSocket connection closed");
     };
 
-    return () => {
-      ws.current?.close(); // コンポーネントがアンマウントされたらWebSocketを閉じる
-    };
+    // return () => {
+    //   ws.current?.close(); // コンポーネントがアンマウントされたらWebSocketを閉じる
+    // };
   }, []);
 
   // 入力内容が変わったときのハンドラー
