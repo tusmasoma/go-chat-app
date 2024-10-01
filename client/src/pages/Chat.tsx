@@ -4,9 +4,27 @@ import Messages,{ CustomMessage } from '../components/chat/messages';
 
 let workspaceID: string = "550e8400-e29b-41d4-a716-446655440000";
 let channelID: string = "123e4567-e89b-12d3-a456-426614174000";
-let userID = "123e4567-e89b-12d3-a456-426614471000";
+
+const decodeToken = (token: string) => {
+  // トークンをドットで分割
+  const parts = token.split('.');
+
+  if (parts.length !== 3) {
+    throw new Error("Invalid token format");
+  }
+
+  // ヘッダー部分とペイロード部分をデコード
+  const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+  const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+
+  console.log("Decoded Header:", header);  // ヘッダーの内容を表示
+  console.log("Decoded Payload:", payload);  // ペイロードの内容を表示
+
+  return payload; // 必要に応じてペイロードの内容を返す
+};
 
 const Chat = () => {
+  const [userID, setUserID] = useState<string>(''); // ユーザーID
   const [messages, setMessages] = useState<CustomMessage[]>([]); // メッセージのリスト
   const [input, setInput] = useState(''); // 入力内容
   const [isLoading, setIsLoading] = useState(false); // ローディング状態
@@ -23,8 +41,23 @@ const Chat = () => {
       return;
     }
 
-    // WebSocket URLにJWTトークンをクエリパラメータとして付与 (例: ws://localhost:8080/ws?token=xxxxx)
-    // ブラウザ環境のWebSocketでは、headers: { Authorization: `Bearer ${token}` } が使えないため、クエリパラメータでトークンを渡す
+    // JWTデコードしてuserIDをセット
+    const decodedPayload = decodeToken(token);
+    setUserID(decodedPayload.userId);
+    console.log('JWT userID:', decodedPayload.userId);
+
+  }, []);
+
+  useEffect(() => {
+    if (!userID) return; // userIDが設定されるまで待つ
+
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+      console.error('JWT token not found');
+      return;
+    }
+
+    // WebSocket接続を開始
     ws.current = new WebSocket(`ws://localhost:8080/ws?token=${token}`);
 
     ws.current.onopen = () => {
@@ -34,22 +67,16 @@ const Chat = () => {
     ws.current.onmessage = (event) => {
       const message: CustomMessage = JSON.parse(event.data);
       if (message.user_id !== userID) {
+        console.log("Received message useID:", message.user_id);
+        console.log("userID:", userID);
         setMessages((prevMessages) => [...prevMessages, message]); // 受信したメッセージを追加
       }
     };
 
-    ws.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
+    return () => {
+      ws.current?.close(); // クリーンアップ時にWebSocketを閉じる
     };
-
-    ws.current.onclose = () => {
-      console.log("WebSocket connection closed");
-    };
-
-    // return () => {
-    //   ws.current?.close(); // コンポーネントがアンマウントされたらWebSocketを閉じる
-    // };
-  }, []);
+  }, [userID]);
 
   // 入力内容が変わったときのハンドラー
   const handleInputChange = (
@@ -65,7 +92,7 @@ const Chat = () => {
 
     const newMessage: CustomMessage = {
       id: String(messages.length + 1),
-      user_id: userID,
+      user_id: "",
       workspace_id: workspaceID,
       target_id: channelID,
       text: input,

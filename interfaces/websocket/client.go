@@ -153,7 +153,7 @@ func (cm *clientManager) handleNewMessage(jsonMessage []byte) {
 		return
 	}
 
-	// message.UserID = cm.client.UserID
+	message.UserID = cm.client.UserID
 
 	cm.routeMessageAction(ctx, message)
 }
