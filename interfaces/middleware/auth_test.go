@@ -55,6 +55,23 @@ func TestAuthMiddleware_Authenticate(t *testing.T) {
 			wantStatus: http.StatusOK,
 		},
 		{
+			name: "Success: token in URL Query",
+			setup: func(m *mock.MockAuthRepository) {
+				m.EXPECT().ValidateAccessToken(jwt).Return(nil)
+				m.EXPECT().GetPayloadFromToken(jwt).Return(
+					map[string]string{
+						"userId": userID,
+						"email":  email,
+					}, nil,
+				)
+			},
+			in: func() *http.Request {
+				req, _ := http.NewRequest(http.MethodGet, "/?token="+jwt, nil)
+				return req
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
 			name: "Fail: No Auth Header",
 			in: func() *http.Request {
 				req, _ := http.NewRequest(http.MethodGet, "/", nil)

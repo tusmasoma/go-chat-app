@@ -33,20 +33,25 @@ func (am *authMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			log.Info("Authentication failed: missing Authorization header")
-			http.Error(w, "Authentication failed: missing Authorization header", http.StatusUnauthorized)
-			return
-		}
+		var jwt string
+		if r.URL.Query().Get("token") != "" {
+			jwt = r.URL.Query().Get("token")
+		} else {
+			authHeader := r.Header.Get("Authorization")
+			if authHeader == "" {
+				log.Info("Authentication failed: missing Authorization header")
+				http.Error(w, "Authentication failed: missing Authorization header", http.StatusUnauthorized)
+				return
+			}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			log.Warn("Authorization failed: header format must be Bearer {token}")
-			http.Error(w, "Authorization failed: header format must be Bearer {token}", http.StatusUnauthorized)
-			return
+			parts := strings.Split(authHeader, " ")
+			if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+				log.Warn("Authorization failed: header format must be Bearer {token}")
+				http.Error(w, "Authorization failed: header format must be Bearer {token}", http.StatusUnauthorized)
+				return
+			}
+			jwt = parts[1]
 		}
-		jwt := parts[1]
 
 		if err := am.ar.ValidateAccessToken(jwt); err != nil {
 			log.Warn("Authentication failed: invalid access token", log.Ferror(err))

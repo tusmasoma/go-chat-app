@@ -12,8 +12,8 @@ type HubManager struct {
 	Hub             *entity.Hub
 	clientManagers  map[*clientManager]bool
 	channelManagers map[*channelManager]bool
-	Register        chan *entity.Client
-	unregister      chan *entity.Client
+	Register        chan *clientManager
+	unregister      chan *clientManager
 	broadcast       chan []byte
 }
 
@@ -22,8 +22,8 @@ func NewHubManager(hub *entity.Hub) HubManager {
 		Hub:             hub,
 		clientManagers:  make(map[*clientManager]bool),
 		channelManagers: make(map[*channelManager]bool),
-		Register:        make(chan *entity.Client),
-		unregister:      make(chan *entity.Client),
+		Register:        make(chan *clientManager),
+		unregister:      make(chan *clientManager),
 		broadcast:       make(chan []byte),
 	}
 }
@@ -41,15 +41,17 @@ func (hm *HubManager) Run() {
 	}
 }
 
-func (hm *HubManager) registerClient(client *entity.Client) {
-	hm.Hub.RegisterClient(client)
+func (hm *HubManager) registerClient(clientM *clientManager) {
+	hm.Hub.RegisterClient(clientM.client)
+	hm.clientManagers[clientM] = true
 }
 
-func (hm *HubManager) unregisterClient(client *entity.Client) {
+func (hm *HubManager) unregisterClient(clientM *clientManager) {
 	for cm := range hm.channelManagers {
-		cm.unregister <- client
+		cm.unregister <- clientM
 	}
-	hm.Hub.UnRegisterClient(client)
+	hm.Hub.UnRegisterClient(clientM.client)
+	delete(hm.clientManagers, clientM)
 }
 
 func (hm *HubManager) broadcastToClients(message []byte) {
@@ -78,8 +80,19 @@ func (hm *HubManager) RegisterChannelManager(cm *channelManager) { // 一旦DI�
 }
 
 // HubManagerに登録されているChannelManagerのClientManagerにClientを登録
-func (hm *HubManager) RegisterClientManagerInChannelManager(client *clientManager) {
+func (hm *HubManager) RegisterClientManagerInChannelManager(clientManager *clientManager) {
 	for cm := range hm.channelManagers {
-		cm.clientManagers[client] = true
+		if !cm.isInChannel(clientManager) {
+			cm.register <- clientManager
+		}
+	}
+}
+
+// channelManagerから該当するclientManagerの登録を削除する
+func (hm *HubManager) UnRegisterClientManagerInChannelManager(clientManager *clientManager) {
+	for cm := range hm.channelManagers {
+		if cm.isInChannel(clientManager) {
+			cm.unregister <- clientManager
+		}
 	}
 }

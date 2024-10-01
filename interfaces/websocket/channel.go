@@ -14,8 +14,8 @@ import (
 type channelManager struct {
 	channel        *entity.Channel
 	clientManagers map[*clientManager]bool
-	register       chan *entity.Client
-	unregister     chan *entity.Client
+	register       chan *clientManager
+	unregister     chan *clientManager
 	broadcast      chan *entity.Message
 	psr            repository.PubSubRepository
 }
@@ -24,8 +24,8 @@ func NewChannelManager(channel *entity.Channel, psr repository.PubSubRepository)
 	return &channelManager{
 		channel:        channel,
 		clientManagers: make(map[*clientManager]bool),
-		register:       make(chan *entity.Client),
-		unregister:     make(chan *entity.Client),
+		register:       make(chan *clientManager),
+		unregister:     make(chan *clientManager),
 		broadcast:      make(chan *entity.Message),
 		psr:            psr,
 	}
@@ -36,19 +36,30 @@ func (cm *channelManager) Run(ctx context.Context) {
 
 	for {
 		select {
-		case client := <-cm.register:
-			cm.channel.RegisterClientInChannel(client)
-		case client := <-cm.unregister:
-			cm.channel.UnRegisterClientInChannel(client)
+		case clientM := <-cm.register:
+			cm.registerClientInChannel(clientM)
+		case clientM := <-cm.unregister:
+			cm.unregisterClientInChannel(clientM)
 		case message := <-cm.broadcast:
 			cm.publishChannelMessage(ctx, message)
 		}
 	}
 }
 
+func (cm *channelManager) registerClientInChannel(clientM *clientManager) {
+	cm.channel.RegisterClientInChannel(clientM.client)
+	cm.clientManagers[clientM] = true
+}
+
+func (cm *channelManager) unregisterClientInChannel(clientM *clientManager) {
+	cm.channel.UnRegisterClientInChannel(clientM.client)
+	delete(cm.clientManagers, clientM)
+}
+
 func (cm *channelManager) broadcastToClientsInChannel(message []byte) {
-	for cm := range cm.clientManagers {
-		cm.send <- message
+	for clientManger := range cm.clientManagers {
+		log.Info("Broadcasting message to clients in channel", log.Fstring("message", string(message)))
+		clientManger.send <- message
 	}
 }
 
@@ -73,4 +84,9 @@ func (cm *channelManager) subscribeToChannelMessages(ctx context.Context) {
 	for msg := range msgs {
 		cm.broadcastToClientsInChannel([]byte(msg.Payload))
 	}
+}
+
+func (cm *channelManager) isInChannel(client *clientManager) bool {
+	_, ok := cm.clientManagers[client]
+	return ok
 }
