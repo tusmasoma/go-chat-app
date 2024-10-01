@@ -4,6 +4,7 @@ import Messages,{ CustomMessage } from '../components/chat/messages';
 
 let workspaceID: string = "550e8400-e29b-41d4-a716-446655440000";
 let channelID: string = "123e4567-e89b-12d3-a456-426614174000";
+let userID = "123e4567-e89b-12d3-a456-426614471000";
 
 const Chat = () => {
   const [messages, setMessages] = useState<CustomMessage[]>([]); // メッセージのリスト
@@ -32,7 +33,9 @@ const Chat = () => {
 
     ws.current.onmessage = (event) => {
       const message: CustomMessage = JSON.parse(event.data);
-      setMessages((prevMessages) => [...prevMessages, message]); // 受信したメッセージを追加
+      if (message.user_id !== userID) {
+        setMessages((prevMessages) => [...prevMessages, message]); // 受信したメッセージを追加
+      }
     };
 
     ws.current.onerror = (error) => {
@@ -62,7 +65,7 @@ const Chat = () => {
 
     const newMessage: CustomMessage = {
       id: String(messages.length + 1),
-      user_id: "",
+      user_id: userID,
       workspace_id: workspaceID,
       target_id: channelID,
       text: input,

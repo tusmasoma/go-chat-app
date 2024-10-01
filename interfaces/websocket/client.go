@@ -135,7 +135,7 @@ func (cm *clientManager) WritePump() { //nolint: gocognit
 }
 
 func (cm *clientManager) disconnect() {
-	cm.hm.unregister <- cm.client
+	cm.hm.unregister <- cm
 	close(cm.send)
 	if err := cm.conn.Close(); err != nil {
 		log.Warn("Failed to close connection", log.Ferror(err))
@@ -153,7 +153,7 @@ func (cm *clientManager) handleNewMessage(jsonMessage []byte) {
 		return
 	}
 
-	message.UserID = cm.client.UserID
+	// message.UserID = cm.client.UserID
 
 	cm.routeMessageAction(ctx, message)
 }

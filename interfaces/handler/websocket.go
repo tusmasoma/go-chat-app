@@ -57,7 +57,7 @@ func (wsh *WebsocketHandler) WebSocket(w http.ResponseWriter, r *http.Request) {
 	go clientManager.WritePump()
 	go clientManager.ReadPump()
 
-	wsh.hm.Register <- client
+	wsh.hm.Register <- clientManager
 
 	// HubManagerに登録さているChannelにClientを登録
 	wsh.hm.RegisterClientManagerInChannelManager(clientManager)
